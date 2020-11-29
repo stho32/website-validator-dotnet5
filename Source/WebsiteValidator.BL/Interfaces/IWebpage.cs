@@ -1,4 +1,6 @@
-﻿namespace WebsiteValidator.BL.Interfaces
+﻿using System.Net;
+
+namespace WebsiteValidator.BL.Interfaces
 {
     /// <summary>
     /// In this application we are focusing on webpages
@@ -18,6 +20,6 @@
         /// <summary>
         /// The HTTP code that was returned.
         /// </summary>
-        int HttpCode { get; }
+        HttpStatusCode HttpCode { get; }
     }
 }
