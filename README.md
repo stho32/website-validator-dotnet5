@@ -1,6 +1,8 @@
 # website-validator
 A dotnet application that crawls a website checking for http 404s and maybe more stuff later
 
+![.NET Core](https://github.com/stho32/website-validator/workflows/.NET%20Core/badge.svg)
+
 ## "big vision"
 
 Intended usage:
