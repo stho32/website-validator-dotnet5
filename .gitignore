@@ -5,3 +5,5 @@
 /Source/WebsiteValidator.BL/obj/
 /Source/.vs
 /Source/WebsiteValidator.sln.DotSettings.user
+/Source/WebsiteValidator/bin/
+/Source/WebsiteValidator/obj/
