@@ -5,6 +5,6 @@
     /// </summary>
     public interface IUrlExtractor
     {
-        string[] ExtractUrls(IWebpage webpage);
+        string[] ExtractUrls(string pageContents);
     }
 }
