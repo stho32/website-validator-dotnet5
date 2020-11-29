@@ -1,4 +1,6 @@
-﻿namespace WebsiteValidator.BL.Interfaces
+﻿using WebsiteValidator.BL.Enums;
+
+namespace WebsiteValidator.BL.Interfaces
 {
     public interface IValidationMessage
     {

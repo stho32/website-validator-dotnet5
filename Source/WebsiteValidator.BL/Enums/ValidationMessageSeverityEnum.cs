@@ -1,4 +1,4 @@
-﻿namespace WebsiteValidator.BL.Interfaces
+﻿namespace WebsiteValidator.BL.Enums
 {
     /// <summary>
     /// The results are more or less sever.
