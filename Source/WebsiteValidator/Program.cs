@@ -11,36 +11,41 @@ namespace WebsiteValidator
     {
         static int Main(string[] args)
         {
-            var urlOption = new Option<string>(new []{ "--url", "-u" }, description: "The url of the website you would like to crawl.");
+            var urlOption = new Option<string>(new[] { "--url", "-u" }, description: "The url of the website you would like to crawl.");
             urlOption.IsRequired = true;
 
             var linksOption = new Option<bool>(new[] { "--links", "-l" }, description: "List all links that you can find.");
+
+            var sslOption = new Option<bool>(new[] { "--ignore-ssl" }, description: "Ignores SSL certificate");
 
             // Create a root command with some options
             var rootCommand = new RootCommand
             {
                 urlOption,
-                linksOption
+                linksOption,
+                sslOption
             };
 
             rootCommand.Description = "WebsiteValidator, a tool to crawl a website and validate it";
 
             // Note that the parameters of the handler method are matched according to the names of the options
-            rootCommand.Handler = CommandHandler.Create<string,bool>((url, links) =>
-            {
-                if (links)
-                {
-                    ListLinksForUrl(url);
-                }
-            });
+            rootCommand.Handler = CommandHandler.Create<string, bool, bool>(ProcessCommand);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.InvokeAsync(args).Result;
         }
 
-        private static void ListLinksForUrl(string url)
+        private static void ProcessCommand(string url, bool links, bool ignoreSsl)
         {
-            IDownloadAWebpage downloadWebpage = new DownloadAWebpage();
+            if (links)
+            {
+                ListLinksForUrl(url, ignoreSsl);
+            }
+        }
+
+        private static void ListLinksForUrl(string url, bool ignoreSsl)
+        {
+            IDownloadAWebpage downloadWebpage = new DownloadAWebpage(ignoreSsl);
             IUrlExtractor extractor = new HtmlAgilityBasedUrlExtractor();
             
             var website = downloadWebpage.Download(url);
