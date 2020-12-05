@@ -7,3 +7,6 @@
 /Source/WebsiteValidator.sln.DotSettings.user
 /Source/WebsiteValidator/bin/
 /Source/WebsiteValidator/obj/
+/.vs
+
+/Source/WebsiteValidator/Properties
