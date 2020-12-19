@@ -2,9 +2,9 @@
 
 namespace WebsiteValidator.BL.Classes
 {
-    public class RelativeToAbsoluteUrlConverter : IRelativeToAbsoluteUrlConverter
+    public class UrlToAbsolutUrlConverter : IUrlToAbsolutUrlConverter
     {
-        public string ToAbsoluteUrl(string baseUrl, string relativeUrl)
+        public string ToAbsoluteUrl(string baseUrl, string url)
         {
             var result = baseUrl;
 
@@ -13,10 +13,15 @@ namespace WebsiteValidator.BL.Classes
                 result += "/";
             }
 
-            if (relativeUrl.StartsWith("/"))
+            if (url.StartsWith("/"))
             {
-                var temp = relativeUrl.Remove(0, 1); // remove "/"
+                var temp = url.Remove(0, 1); // remove "/"
                 result += temp;
+            }
+
+            if (url.StartsWith("https://"))
+            {
+                return url;
             }
 
             return result;

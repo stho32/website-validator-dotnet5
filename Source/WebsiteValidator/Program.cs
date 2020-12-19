@@ -50,11 +50,12 @@ namespace WebsiteValidator
             
             var website = downloadWebpage.Download(url);
             var links = extractor.ExtractUrls(website.Result.RawContent);
+            var converter = new UrlToAbsolutUrlConverter();
 
             for (var index = 0; index < links.Length; index++)
             {
-                var link = links[index];
-                Console.WriteLine($"{index,4}. {link}");
+                var result = converter.ToAbsoluteUrl(url, links[index]);
+                Console.WriteLine($"{index,4}. {result}");
             }
         }
     }

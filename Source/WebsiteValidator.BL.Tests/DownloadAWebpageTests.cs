@@ -8,7 +8,6 @@ namespace WebsiteValidator.BL.Tests
 {
     public class DownloadAWebpageTests
     {
-        private Interfaces.IWebpage result;
 
         /// <summary>
         /// This is not exactly a unit test. It will check if the download functionality works
