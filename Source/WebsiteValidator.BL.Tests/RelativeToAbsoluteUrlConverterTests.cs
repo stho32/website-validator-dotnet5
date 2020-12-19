@@ -5,7 +5,7 @@ using Xunit;
 
 namespace WebsiteValidator.BL.Tests
 {
-    public class RelativeToAbsoluteUrlConverterTests
+    public class UrlToAbsolutUrlConverterTests
     {
         [Fact]
         public void Einfache_Umwandlung()
@@ -13,10 +13,22 @@ namespace WebsiteValidator.BL.Tests
             var relativeUrl = "/helloWorld.php";
             var baseUrl = "https://whatever.com";
 
-            var converter = new RelativeToAbsoluteUrlConverter();
+            var converter = new UrlToAbsolutUrlConverter();
             var result = converter.ToAbsoluteUrl(baseUrl, relativeUrl);
 
             Assert.Equal("https://whatever.com/helloWorld.php", result);
         }
+
+        [Fact]
+        public void Wenn_absolute_URL_uebergeben_wird_dann_nichts_tun()
+        {
+            var baseUrl = "https://whatever.com";
+
+            var converter = new UrlToAbsolutUrlConverter();
+            var result = converter.ToAbsoluteUrl(baseUrl, "https://whatever.com/test-fuer-unsere-seite");
+
+            Assert.Equal("https://whatever.com/test-fuer-unsere-seite", result);
+        }
+
     }
 }
