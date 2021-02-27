@@ -1,4 +1,6 @@
-﻿using WebsiteValidator.BL.Interfaces;
+﻿using System.Collections.Generic;
+using System.Linq;
+using WebsiteValidator.BL.Interfaces;
 
 namespace WebsiteValidator.BL.Classes
 {
@@ -25,6 +27,13 @@ namespace WebsiteValidator.BL.Classes
             }
 
             return result;
+        }
+
+        public string[] ToAbsoluteUrl(string baseUrl, string[] links)
+        {
+            return links.Select(
+                link => ToAbsoluteUrl(baseUrl, link)
+                ).ToArray();
         }
     }
 }
