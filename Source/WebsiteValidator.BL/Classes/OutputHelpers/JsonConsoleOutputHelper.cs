@@ -11,5 +11,11 @@ namespace WebsiteValidator.BL.Classes
             var json = JsonConvert.SerializeObject(arrayOfThings, Formatting.Indented);
             Console.WriteLine(json);
         }
+
+        public void Write(string name, IUrlInformation[] arrayOfThings)
+        {
+            var json = JsonConvert.SerializeObject(arrayOfThings, Formatting.Indented);
+            Console.WriteLine(json);
+        }
     }
 }

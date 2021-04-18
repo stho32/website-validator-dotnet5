@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -16,6 +17,7 @@ namespace WebsiteValidator
             urlOption.IsRequired = true;
 
             var linksOption = new Option<bool>(new[] { "--links", "-l" }, description: "List all links that you can find.");
+            var crawlOption = new Option<bool>(new[] { "--crawl", "-c" }, description: "Crawl the full page and list all links.");
             var sslOption = new Option<bool>(new[] { "--ignore-ssl" }, description: "Ignores SSL certificate");
             var humanOption = new Option<bool>(new[] {"--human", "-h"}, "Human readable output (instead of json)");
 
@@ -25,23 +27,35 @@ namespace WebsiteValidator
                 urlOption,
                 linksOption,
                 sslOption,
-                humanOption
+                humanOption,
+                crawlOption
             };
 
             rootCommand.Description = "WebsiteValidator, a tool to crawl a website and validate it";
 
             // Note that the parameters of the handler method are matched according to the names of the options
-            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool>(ProcessCommand);
+            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool>(ProcessCommand);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.InvokeAsync(args).Result;
         }
 
-        private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human)
+        private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl)
         {
             var outputHelper = new OutputHelperFactory().Get(human);
             
             if (links) ListLinksForUrl(url, ignoreSsl, outputHelper);
+            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper);
+        }
+
+        private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper)
+        {
+            IDownloadAWebpage downloadWebpage = new DownloadAWebpage(ignoreSsl);
+
+            var crawler = new Crawler(url, downloadWebpage, outputHelper);
+            var result = crawler.CrawlEverything();
+            
+            outputHelper.Write("crawlresult", result);
         }
 
         private static void ListLinksForUrl(string url, bool ignoreSsl, IOutputHelper outputHelper)
@@ -57,4 +71,5 @@ namespace WebsiteValidator
             outputHelper.Write("links", links);
         }
     }
+
 }
