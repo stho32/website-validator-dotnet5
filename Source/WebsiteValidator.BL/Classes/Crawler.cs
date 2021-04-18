@@ -41,7 +41,7 @@ namespace WebsiteValidator.BL.Classes
                     var download = _downloadWebpage.Download(nextUrl); 
                     var links = download
                             .ExtractUrls()
-                            .ToAbsoluteUrls(nextUrl);
+                            .ToAbsoluteUrls(_baseUrl);
 
                     _scrapeResults.Add(new UrlInformation(
                         nextUrl, 
