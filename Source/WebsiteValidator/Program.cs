@@ -20,6 +20,9 @@ namespace WebsiteValidator
             var crawlOption = new Option<bool>(new[] { "--crawl", "-c" }, description: "Crawl the full page and list all links.");
             var sslOption = new Option<bool>(new[] { "--ignore-ssl" }, description: "Ignores SSL certificate");
             var humanOption = new Option<bool>(new[] {"--human", "-h"}, "Human readable output (instead of json)");
+            
+            var outputOption = new Option<string>(new[] { "--output", "-o" }, description: "Where to save the results. Without the option i'll write on the screen.");
+            var limitOption = new Option<int>(new[] { "--limit" }, description: "Maximum number of pages to crawl.");
 
             // Create a root command with some options
             var rootCommand = new RootCommand
@@ -28,31 +31,34 @@ namespace WebsiteValidator
                 linksOption,
                 sslOption,
                 humanOption,
-                crawlOption
+                crawlOption,
+                outputOption,
+                limitOption
             };
 
             rootCommand.Description = "WebsiteValidator, a tool to crawl a website and validate it";
 
             // Note that the parameters of the handler method are matched according to the names of the options
-            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool>(ProcessCommand);
+            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool, string, int>(ProcessCommand);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.InvokeAsync(args).Result;
         }
 
-        private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl)
+        private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl, string output,
+            int limit)
         {
-            var outputHelper = new OutputHelperFactory().Get(human);
+            var outputHelper = new OutputHelperFactory().Get(human, output);
             
             if (links) ListLinksForUrl(url, ignoreSsl, outputHelper);
-            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper);
+            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit);
         }
 
-        private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper)
+        private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper, int limit)
         {
             IDownloadAWebpage downloadWebpage = new DownloadAWebpage(ignoreSsl);
 
-            var crawler = new Crawler(url, downloadWebpage, outputHelper);
+            var crawler = new Crawler(url, downloadWebpage, outputHelper, limit);
             var result = crawler.CrawlEverything();
             
             outputHelper.Write("crawlresult", result);

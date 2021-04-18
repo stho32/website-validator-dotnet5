@@ -10,14 +10,16 @@ namespace WebsiteValidator.BL.Classes
     {
         private readonly IDownloadAWebpage _downloadWebpage;
         private readonly IOutputHelper _outputHelper;
+        private readonly int _limit;
         private readonly Dictionary<string, bool> _urlsWithScrapedStatus = new Dictionary<string, bool>();
         private readonly List<IUrlInformation> _scrapeResults = new List<IUrlInformation>();
         private string _baseUrl;
         
-        public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper)
+        public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit)
         {
             _downloadWebpage = downloadWebpage;
             _outputHelper = outputHelper;
+            _limit = limit;
             _urlsWithScrapedStatus.Add(url, false);
             _baseUrl = url;
         }
@@ -25,34 +27,37 @@ namespace WebsiteValidator.BL.Classes
         public IUrlInformation[] CrawlEverything()
         {
             var nextUrl = GetNextUrlToCrawl();
+            var scrapedUrls = 0;
 
             while (!string.IsNullOrWhiteSpace(nextUrl))
             {
                 _urlsWithScrapedStatus[nextUrl] = true;
-                Console.WriteLine($" - processing {nextUrl} ... (n to stop)");
-                if (Console.ReadLine() == "n")
-                {
-                    break;
-                }
+                StatusReport(scrapedUrls);
+                scrapedUrls += 1; 
+                Console.WriteLine($" - processing {nextUrl} ...");
 
                 try
                 {
-                    var links =
-                        _downloadWebpage
-                            .Download(nextUrl)
+                    var download = _downloadWebpage.Download(nextUrl); 
+                    var links = download
                             .ExtractUrls()
                             .ToAbsoluteUrls(nextUrl);
 
                     _scrapeResults.Add(new UrlInformation(
                         nextUrl, 
                         links, 
-                        -1));
+                        download.Result.HttpCode));
                     
                     foreach (var link in links)
                     {
                         if (!_urlsWithScrapedStatus.ContainsKey(link))
                         {
                             _urlsWithScrapedStatus.Add(link, false);
+                            //Console.WriteLine($"     + {link}");
+                        }
+                        else
+                        {
+                            //Console.WriteLine($"     / {link} already known");
                         }
                     }
                 }
@@ -62,9 +67,29 @@ namespace WebsiteValidator.BL.Classes
                 }
 
                 nextUrl = GetNextUrlToCrawl();
+
+                // if limit given, we only crawl n pages
+                if (_limit > 0)
+                {
+                    if (scrapedUrls > _limit)
+                    {
+                        break;
+                    }
+                }
             }
 
             return _scrapeResults.ToArray();
+        }
+
+        private void StatusReport(int scrapedUrls)
+        {
+            var potenialUrlsToCrawl = 
+                _urlsWithScrapedStatus.
+                    Where(x => 
+                        x.Value == false
+                        && x.Key.StartsWith(_baseUrl)).ToArray();
+            
+            Console.WriteLine($"## STATUS : {scrapedUrls} urls scraped, {_urlsWithScrapedStatus.Count} urls known, {potenialUrlsToCrawl.Length} urls to crawl remaining");
         }
 
         private string GetNextUrlToCrawl()

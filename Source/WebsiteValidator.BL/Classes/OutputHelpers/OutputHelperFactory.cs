@@ -4,12 +4,17 @@ namespace WebsiteValidator.BL.Classes
 {
     public class OutputHelperFactory : IOutputHelperFactory
     {
-        public IOutputHelper Get(bool human)
+        public IOutputHelper Get(bool human, string outputFilename)
         {
             if (human)
                 return new HumanReadableConsoleOutputHelper();
 
-            return new JsonConsoleOutputHelper();
+            if (string.IsNullOrWhiteSpace(outputFilename))
+            {
+                return new JsonConsoleOutputHelper();
+            }
+            
+            return new JsonFileOutputHelper(outputFilename);
         }
     }
 }
