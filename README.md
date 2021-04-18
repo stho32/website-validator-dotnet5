@@ -37,9 +37,9 @@ Output (example):
 
   - [X] convert relative urls to absolute ones
   - [X] return the output either as human readable or json (is there a generic approach?); maybe add a --human switch for the more readable output and default to json
-  - [ ] return only distinct results
-  - [ ] enable some basic crawling activity
-    - [ ] remember the result of each url, so every url is only crawled once
+  - [X] return only distinct results
+  - [X] enable some basic crawling activity
+    - [X] remember the result of each url, so every url is only crawled once
     - [ ] only check external urls, but do not feed links from them back into the system. It is important that they are basically reachable but we do not want to check their pages, too)
   - [ ] also crawl resource files like linked images, css and javascript
   - [ ] add an option for a final human readable report?
