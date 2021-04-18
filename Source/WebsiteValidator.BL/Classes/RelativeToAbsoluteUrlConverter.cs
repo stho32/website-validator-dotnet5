@@ -8,6 +8,16 @@ namespace WebsiteValidator.BL.Classes
     {
         public string ToAbsoluteUrl(string baseUrl, string url)
         {
+            if (url.StartsWith("https://"))
+            {
+                return url;
+            }
+
+            if (url.StartsWith("//"))
+            {
+                return url;
+            }            
+            
             var result = baseUrl;
 
             if (!result.EndsWith("/"))
@@ -19,11 +29,6 @@ namespace WebsiteValidator.BL.Classes
             {
                 var temp = url.Remove(0, 1); // remove "/"
                 result += temp;
-            }
-
-            if (url.StartsWith("https://"))
-            {
-                return url;
             }
 
             return result;
