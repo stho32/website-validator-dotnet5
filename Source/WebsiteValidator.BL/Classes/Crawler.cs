@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 using HtmlAgilityPack;
 using WebsiteValidator.BL.ExtensionMethods;
 using WebsiteValidator.BL.Interfaces;
@@ -96,7 +97,7 @@ namespace WebsiteValidator.BL.Classes
             {
                 var document = new HtmlDocument();
                 document.LoadHtml(resultRawContent);
-                return document.DocumentNode.InnerText;
+                return HttpUtility.HtmlDecode(document.DocumentNode.InnerText);
             }
             catch (Exception e)
             {
