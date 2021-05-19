@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Web;
 using HtmlAgilityPack;
 using WebsiteValidator.BL.ExtensionMethods;
@@ -95,9 +96,26 @@ namespace WebsiteValidator.BL.Classes
 
             try
             {
+                var blacklist = new List<string>();
+                blacklist.Add("script");
+                blacklist.Add("style");
+                blacklist.Add("head");
                 var document = new HtmlDocument();
                 document.LoadHtml(resultRawContent);
-                return HttpUtility.HtmlDecode(document.DocumentNode.InnerText);
+                var result = new StringBuilder();
+
+                foreach(HtmlNode node in document.DocumentNode.SelectNodes("//text()"))
+                {
+                    if (node.InnerText.Trim() != "" &&
+                        !blacklist.Contains(node.ParentNode.Name)) {
+                        //Console.WriteLine(node.ParentNode.Name + ":");
+                        //Console.WriteLine("text=" + node.InnerText);
+                        result.AppendLine(node.InnerText);
+                        //Console.ReadKey();
+                    }
+                }
+                
+                return HttpUtility.HtmlDecode(result.ToString());
             }
             catch (Exception e)
             {
