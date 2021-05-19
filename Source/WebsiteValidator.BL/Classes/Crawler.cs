@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HtmlAgilityPack;
 using WebsiteValidator.BL.ExtensionMethods;
 using WebsiteValidator.BL.Interfaces;
 
@@ -47,7 +48,9 @@ namespace WebsiteValidator.BL.Classes
                         nextUrl, 
                         links, 
                         download.Result.HttpCode,
-                        download.Result.RawContent));
+                        download.Result.RawContent,
+                        ExtractInnerText(download.Result.RawContent)
+                        ));
                     
                     foreach (var link in links)
                     {
@@ -80,6 +83,25 @@ namespace WebsiteValidator.BL.Classes
             }
 
             return _scrapeResults.ToArray();
+        }
+
+        private string ExtractInnerText(string resultRawContent)
+        {
+            if (!resultRawContent.ToLower().Contains("html"))
+            {
+                return "";
+            }
+
+            try
+            {
+                var document = new HtmlDocument();
+                document.LoadHtml(resultRawContent);
+                return document.DocumentNode.InnerText;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
         }
 
         private void StatusReport(int scrapedUrls)

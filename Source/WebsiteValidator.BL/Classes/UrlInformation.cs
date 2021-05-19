@@ -9,13 +9,15 @@ namespace WebsiteValidator.BL.Classes
         public string[] Links { get; }
         public HttpStatusCode HttpResponseCode { get; }
         public string Content { get; }
+        public string ContentWithoutHtml { get; }
 
-        public UrlInformation(string url, string[] links, HttpStatusCode httpResponseCode, string content)
+        public UrlInformation(string url, string[] links, HttpStatusCode httpResponseCode, string content, string contentWithoutHtml)
         {
             Url = url;
             Links = links;
             HttpResponseCode = httpResponseCode;
             Content = content;
+            ContentWithoutHtml = contentWithoutHtml;
         }
     }
 }

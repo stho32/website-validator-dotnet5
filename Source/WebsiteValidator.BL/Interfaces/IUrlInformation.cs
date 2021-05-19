@@ -8,6 +8,7 @@ namespace WebsiteValidator.BL.Interfaces
         string[] Links { get; }
         HttpStatusCode HttpResponseCode { get; }
         string Content { get; }
+        string ContentWithoutHtml { get; }
     }
 
 
