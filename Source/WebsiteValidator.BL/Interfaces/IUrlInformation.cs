@@ -7,6 +7,7 @@ namespace WebsiteValidator.BL.Interfaces
         string Url { get; }
         string[] Links { get; }
         HttpStatusCode HttpResponseCode { get; }
+        string Content { get; }
     }
 
 

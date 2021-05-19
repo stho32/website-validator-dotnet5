@@ -46,7 +46,8 @@ namespace WebsiteValidator.BL.Classes
                     _scrapeResults.Add(new UrlInformation(
                         nextUrl, 
                         links, 
-                        download.Result.HttpCode));
+                        download.Result.HttpCode,
+                        download.Result.RawContent));
                     
                     foreach (var link in links)
                     {
