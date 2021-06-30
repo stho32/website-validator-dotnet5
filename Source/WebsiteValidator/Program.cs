@@ -23,6 +23,9 @@ namespace WebsiteValidator
             
             var outputOption = new Option<string>(new[] { "--output", "-o" }, description: "Where to save the results. Without the option i'll write on the screen.");
             var limitOption = new Option<int>(new[] { "--limit" }, description: "Maximum number of pages to crawl.");
+            var additionalEntryPoints = new Option<string>(
+                new[] {"--additionalEntrypoints", "--ae"},
+                "A simple text file with a list of urls, for e.g. sitemap-links...");
 
             // Create a root command with some options
             var rootCommand = new RootCommand
@@ -33,32 +36,43 @@ namespace WebsiteValidator
                 humanOption,
                 crawlOption,
                 outputOption,
-                limitOption
+                limitOption,
+                additionalEntryPoints
             };
 
             rootCommand.Description = "WebsiteValidator, a tool to crawl a website and validate it";
 
             // Note that the parameters of the handler method are matched according to the names of the options
-            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool, string, int>(ProcessCommand);
+            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool, string, int, string>(ProcessCommand);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.InvokeAsync(args).Result;
         }
 
         private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl, string output,
-            int limit)
+            int limit, string additionalEntryPoints)
         {
             var outputHelper = new OutputHelperFactory().Get(human, output);
             
             if (links) ListLinksForUrl(url, ignoreSsl, outputHelper);
-            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit);
+
+            if (string.IsNullOrWhiteSpace(additionalEntryPoints))
+            {
+                var additionalKnownLinks = File.ReadAllLines(additionalEntryPoints);
+                if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, additionalKnownLinks);
+            }
+            else
+            {
+                if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, new string[0] );
+            }
         }
 
-        private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper, int limit)
+        private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper, int limit,
+            string[] additionalKnownLinks)
         {
             IDownloadAWebpage downloadWebpage = new DownloadAWebpage(ignoreSsl);
 
-            var crawler = new Crawler(url, downloadWebpage, outputHelper, limit);
+            var crawler = new Crawler(url, downloadWebpage, outputHelper, limit, additionalKnownLinks);
             var result = crawler.CrawlEverything();
             
             outputHelper.Write("crawlresult", result);

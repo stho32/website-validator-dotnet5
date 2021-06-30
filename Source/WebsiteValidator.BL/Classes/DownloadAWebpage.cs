@@ -36,7 +36,7 @@ namespace WebsiteValidator.BL.Classes
                     // Make request here.
                     var response = await client.GetAsync(url);
                     var pageContents = await response.Content.ReadAsStringAsync();
-                    return new Webpage(url, pageContents, response.StatusCode);
+                    return new Webpage(url, pageContents, pageContents.Length, response.StatusCode);
                 }
             }
         }

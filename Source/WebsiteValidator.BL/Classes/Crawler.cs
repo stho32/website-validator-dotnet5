@@ -18,12 +18,22 @@ namespace WebsiteValidator.BL.Classes
         private readonly List<IUrlInformation> _scrapeResults = new List<IUrlInformation>();
         private string _baseUrl;
         
-        public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit)
+        public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit,
+            string[] additionalKnownLinks)
         {
             _downloadWebpage = downloadWebpage;
             _outputHelper = outputHelper;
             _limit = limit;
             _urlsWithScrapedStatus.Add(url, false);
+
+            foreach (var link in additionalKnownLinks)
+            {
+                if (!string.IsNullOrWhiteSpace(link.Trim()))
+                {
+                    _urlsWithScrapedStatus.Add(link, false);
+                }
+            }
+            
             _baseUrl = url;
         }
 
@@ -51,7 +61,8 @@ namespace WebsiteValidator.BL.Classes
                         links, 
                         download.Result.HttpCode,
                         download.Result.RawContent,
-                        ExtractInnerText(download.Result.RawContent)
+                        ExtractInnerText(download.Result.RawContent),
+                        download.Result.RawContent.Length
                         ));
                     
                     foreach (var link in links)

@@ -18,6 +18,11 @@ namespace WebsiteValidator.BL.Interfaces
         string RawContent { get; }
 
         /// <summary>
+        /// File size
+        /// </summary>
+        int ContentSizeInBytes { get; }
+
+        /// <summary>
         /// The HTTP code that was returned.
         /// </summary>
         HttpStatusCode HttpCode { get; }
