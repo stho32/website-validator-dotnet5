@@ -56,7 +56,7 @@ namespace WebsiteValidator
             
             if (links) ListLinksForUrl(url, ignoreSsl, outputHelper);
 
-            if (string.IsNullOrWhiteSpace(additionalEntryPoints))
+            if (!string.IsNullOrWhiteSpace(additionalEntryPoints))
             {
                 var additionalKnownLinks = File.ReadAllLines(additionalEntryPoints);
                 if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, additionalKnownLinks);
