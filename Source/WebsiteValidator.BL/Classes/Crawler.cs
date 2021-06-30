@@ -30,7 +30,8 @@ namespace WebsiteValidator.BL.Classes
             {
                 if (!string.IsNullOrWhiteSpace(link.Trim()))
                 {
-                    _urlsWithScrapedStatus.Add(link, false);
+                    if (!_urlsWithScrapedStatus.ContainsKey(link))
+                        _urlsWithScrapedStatus.Add(link, false);
                 }
             }
             
