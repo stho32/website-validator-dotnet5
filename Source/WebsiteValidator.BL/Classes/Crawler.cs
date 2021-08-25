@@ -53,9 +53,16 @@ namespace WebsiteValidator.BL.Classes
                 try
                 {
                     var download = _downloadWebpage.Download(nextUrl); 
+                    
+                    //if (((int)download.Result.HttpCode < 200) || ((int)download.Result.HttpCode > 299))
+                    if ((int)download.Result.HttpCode == 500)
+                    {
+                            // Take another try..
+                            download = _downloadWebpage.Download(nextUrl);
+                    }
                     var links = download
-                            .ExtractUrls()
-                            .ToAbsoluteUrls(_baseUrl);
+                        .ExtractUrls()
+                        .ToAbsoluteUrls(_baseUrl);
 
                     _scrapeResults.Add(new UrlInformation(
                         nextUrl, 
