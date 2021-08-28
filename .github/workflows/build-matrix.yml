@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
     branches: [ main ]
-    paths:
-    - '**.cs'
-    - '**.csproj'
 
 env:
   DOTNET_VERSION: '5.0.301' # The .NET SDK version to use
@@ -34,3 +31,12 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
       working-directory: Source
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          README.md
+          
+          
