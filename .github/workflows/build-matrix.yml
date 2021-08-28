@@ -54,6 +54,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          ./Source/${{matrix.OUTPUTDIR}}
+          ./Source/${{matrix.OUTPUTDIR}}/*
           
           
