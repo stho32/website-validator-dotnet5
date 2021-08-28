@@ -46,7 +46,7 @@ jobs:
       working-directory: Source
       
     - name: Publish
-      run: dotnet publish -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained true -p:IncludeNativeLibrariesForSelfExtract=true -r ${{matrix.RUNTIMEID}}
+      run: dotnet publish -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true --self-contained true -p:IncludeNativeLibrariesForSelfExtract=true -r ${{matrix.RUNTIMEID}}
       working-directory: Source
 
     - name: Release
