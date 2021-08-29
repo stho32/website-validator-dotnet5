@@ -46,7 +46,7 @@ jobs:
       working-directory: Source
       
     - name: Publish
-      run: dotnet publish -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true --self-contained true -p:IncludeNativeLibrariesForSelfExtract=true -r ${{matrix.RUNTIMEID}}
+      run: dotnet publish -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -r ${{matrix.RUNTIMEID}}
       working-directory: Source
 
     - uses: papeloto/action-zip@v1
