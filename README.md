@@ -35,7 +35,7 @@ Output (example):
 
 ### basic functionality
 
-  - [ ] convert relative urls to absolute ones
+  - [X] convert relative urls to absolute ones
   - [ ] return the output either as human readable or json (is there a generic approach?); maybe add a --human switch for the more readable output and default to json
   - [ ] enable some basic crawling activity
     - [ ] remember the result of each url, so every url is only crawled once
