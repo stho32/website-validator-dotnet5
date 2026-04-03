@@ -1,39 +1,41 @@
 using System.Net;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using WebsiteValidator.BL.Classes;
 using WebsiteValidator.BL.ExtensionMethods;
 using WebsiteValidator.BL.Interfaces;
-using Xunit;
 
 namespace WebsiteValidator.BL.Tests
 {
+    [TestFixture]
     public class StringArrayExtensionMethodsTests
     {
-        [Fact]
+        [Test]
         public void ToAbsoluteUrls_konvertiert_relative_URLs()
         {
             var links = new[] { "/page1", "/page2" };
             var result = links.ToAbsoluteUrls("https://example.com");
 
-            Assert.Equal(2, result.Length);
-            Assert.Equal("https://example.com/page1", result[0]);
-            Assert.Equal("https://example.com/page2", result[1]);
+            Assert.That(result, Has.Length.EqualTo(2));
+            Assert.That(result[0], Is.EqualTo("https://example.com/page1"));
+            Assert.That(result[1], Is.EqualTo("https://example.com/page2"));
         }
 
-        [Fact]
+        [Test]
         public void ToAbsoluteUrls_filtert_ungueltige_URLs()
         {
             var links = new[] { "/page1", "mailto:test@test.com", "#anchor" };
             var result = links.ToAbsoluteUrls("https://example.com");
 
-            Assert.Single(result);
-            Assert.Equal("https://example.com/page1", result[0]);
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(result[0], Is.EqualTo("https://example.com/page1"));
         }
     }
 
+    [TestFixture]
     public class WebpageExtensionMethodsTests
     {
-        [Fact]
+        [Test]
         public void ExtractUrls_extrahiert_Links_aus_Webpage()
         {
             var webpage = Task.FromResult<IWebpage>(
@@ -41,11 +43,11 @@ namespace WebsiteValidator.BL.Tests
 
             var urls = webpage.ExtractUrls();
 
-            Assert.Single(urls);
-            Assert.Equal("https://link.com", urls[0]);
+            Assert.That(urls, Has.Length.EqualTo(1));
+            Assert.That(urls[0], Is.EqualTo("https://link.com"));
         }
 
-        [Fact]
+        [Test]
         public void ExtractUrls_gibt_leeres_Array_bei_keinen_Links()
         {
             var webpage = Task.FromResult<IWebpage>(
@@ -53,7 +55,7 @@ namespace WebsiteValidator.BL.Tests
 
             var urls = webpage.ExtractUrls();
 
-            Assert.Empty(urls);
+            Assert.That(urls, Is.Empty);
         }
     }
 }

@@ -1,33 +1,34 @@
 using System;
 using System.IO;
 using System.Net;
+using NUnit.Framework;
 using WebsiteValidator.BL.Classes;
-using Xunit;
 
 namespace WebsiteValidator.BL.Tests
 {
-    [Collection("ConsoleOutput")]
+    [TestFixture]
+    [NonParallelizable]
     public class JsonConsoleOutputHelperTests
     {
-        [Fact]
+        [Test]
         public void Write_string_array_gibt_JSON_auf_Konsole_aus()
         {
             var helper = new JsonConsoleOutputHelper();
             var output = CaptureConsoleOutput(() => helper.Write("test", new[] { "a", "b" }));
 
-            Assert.Contains("\"a\"", output);
-            Assert.Contains("\"b\"", output);
+            Assert.That(output, Does.Contain("\"a\""));
+            Assert.That(output, Does.Contain("\"b\""));
         }
 
-        [Fact]
+        [Test]
         public void Write_UrlInformation_array_gibt_JSON_auf_Konsole_aus()
         {
             var helper = new JsonConsoleOutputHelper();
             var urlInfo = new UrlInformation("https://example.com", new[] { "https://link.com" }, HttpStatusCode.OK, "<html></html>", "text", 100);
             var output = CaptureConsoleOutput(() => helper.Write("test", new[] { urlInfo }));
 
-            Assert.Contains("https://example.com", output);
-            Assert.Contains("https://link.com", output);
+            Assert.That(output, Does.Contain("https://example.com"));
+            Assert.That(output, Does.Contain("https://link.com"));
         }
 
         private static string CaptureConsoleOutput(Action action)
@@ -47,32 +48,33 @@ namespace WebsiteValidator.BL.Tests
         }
     }
 
-    [Collection("ConsoleOutput")]
+    [TestFixture]
+    [NonParallelizable]
     public class HumanReadableConsoleOutputHelperTests
     {
-        [Fact]
+        [Test]
         public void Write_string_array_gibt_nummerierte_Liste_aus()
         {
             var helper = new HumanReadableConsoleOutputHelper();
             var output = CaptureConsoleOutput(() => helper.Write("links", new[] { "https://a.com", "https://b.com" }));
 
-            Assert.Contains("links:", output);
-            Assert.Contains("1.", output);
-            Assert.Contains("2.", output);
-            Assert.Contains("https://a.com", output);
-            Assert.Contains("https://b.com", output);
+            Assert.That(output, Does.Contain("links:"));
+            Assert.That(output, Does.Contain("1."));
+            Assert.That(output, Does.Contain("2."));
+            Assert.That(output, Does.Contain("https://a.com"));
+            Assert.That(output, Does.Contain("https://b.com"));
         }
 
-        [Fact]
+        [Test]
         public void Write_UrlInformation_array_gibt_verschachtelte_Liste_aus()
         {
             var helper = new HumanReadableConsoleOutputHelper();
             var urlInfo = new UrlInformation("https://example.com", new[] { "https://sub.com" }, HttpStatusCode.OK, "<html></html>", "text", 100);
             var output = CaptureConsoleOutput(() => helper.Write("result", new[] { urlInfo }));
 
-            Assert.Contains("result:", output);
-            Assert.Contains("https://example.com", output);
-            Assert.Contains("https://sub.com", output);
+            Assert.That(output, Does.Contain("result:"));
+            Assert.That(output, Does.Contain("https://example.com"));
+            Assert.That(output, Does.Contain("https://sub.com"));
         }
 
         private static string CaptureConsoleOutput(Action action)
@@ -92,9 +94,10 @@ namespace WebsiteValidator.BL.Tests
         }
     }
 
+    [TestFixture]
     public class JsonFileOutputHelperTests
     {
-        [Fact]
+        [Test]
         public void Write_string_array_schreibt_JSON_in_Datei()
         {
             var tempFile = Path.GetTempFileName();
@@ -104,8 +107,8 @@ namespace WebsiteValidator.BL.Tests
                 helper.Write("test", new[] { "a", "b" });
 
                 var content = File.ReadAllText(tempFile);
-                Assert.Contains("\"a\"", content);
-                Assert.Contains("\"b\"", content);
+                Assert.That(content, Does.Contain("\"a\""));
+                Assert.That(content, Does.Contain("\"b\""));
             }
             finally
             {
@@ -113,7 +116,7 @@ namespace WebsiteValidator.BL.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void Write_UrlInformation_array_schreibt_JSON_in_Datei()
         {
             var tempFile = Path.GetTempFileName();
@@ -124,7 +127,7 @@ namespace WebsiteValidator.BL.Tests
                 helper.Write("test", new[] { urlInfo });
 
                 var content = File.ReadAllText(tempFile);
-                Assert.Contains("https://example.com", content);
+                Assert.That(content, Does.Contain("https://example.com"));
             }
             finally
             {

@@ -1,11 +1,12 @@
-﻿using WebsiteValidator.BL.Classes;
-using Xunit;
+using NUnit.Framework;
+using WebsiteValidator.BL.Classes;
 
 namespace WebsiteValidator.BL.Tests
 {
+    [TestFixture]
     public class UrlExtractorTests
     {
-        [Fact]
+        [Test]
         public void Extract_Url()
         {
             string html = "<a href=\"https://github.com\">";
@@ -13,8 +14,8 @@ namespace WebsiteValidator.BL.Tests
             var extractor = new HtmlAgilityBasedUrlExtractor();
             var urls = extractor.ExtractUrls(html);
 
-            Assert.Single(urls);
-            Assert.Equal("https://github.com", urls[0]);
+            Assert.That(urls, Has.Length.EqualTo(1));
+            Assert.That(urls[0], Is.EqualTo("https://github.com"));
         }
     }
 }

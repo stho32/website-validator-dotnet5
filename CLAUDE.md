@@ -45,7 +45,7 @@ Source/
 │   ├── Enums/                  # ValidationMessageSeverityEnum
 │   ├── ExtensionMethods/       # String[] und Webpage Extensions
 │   └── Interfaces/             # Alle Interfaces (IDownloadAWebpage, IOutputHelper, etc.)
-└── WebsiteValidator.BL.Tests/  # xUnit Tests (38 Tests, 96% Coverage)
+└── WebsiteValidator.BL.Tests/  # NUnit Tests (38 Tests, 96% Coverage)
 ```
 
 ## Technologie-Stack
@@ -54,7 +54,7 @@ Source/
 - HtmlAgilityPack 1.12.4 (HTML-Parsing)
 - System.CommandLine 2.0.5 (CLI)
 - System.Text.Json (JSON-Serialisierung, Teil des SDK)
-- xUnit 2.9.3 + Moq 4.20.72 + coverlet 6.0.4 (Tests)
+- NUnit 4.3.2 + NUnit3TestAdapter 4.6.0 + Moq 4.20.72 + coverlet 6.0.4 (Tests)
 
 ## CI/CD
 
@@ -64,5 +64,6 @@ Source/
 ## Konventionen
 
 - Interfaces in `Interfaces/`, Implementierungen in `Classes/`
-- Tests die Console.SetOut verwenden mit `[Collection("ConsoleOutput")]` markieren (xUnit Parallelisierung)
+- Tests die Console.SetOut verwenden mit `[NonParallelizable]` markieren (NUnit Parallelisierung)
+- `[TestFixture]` auf jeder Testklasse, `[Test]` statt `[Fact]`, `Assert.That()` statt `Assert.Equal()`
 - Anforderungen in `Anforderungen/` mit Format `RXXXXX-Titel.md` (5-stellig mit führenden Nullen)

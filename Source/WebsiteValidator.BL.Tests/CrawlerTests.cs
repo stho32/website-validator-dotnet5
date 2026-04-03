@@ -3,13 +3,14 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Moq;
+using NUnit.Framework;
 using WebsiteValidator.BL.Classes;
 using WebsiteValidator.BL.Interfaces;
-using Xunit;
 
 namespace WebsiteValidator.BL.Tests
 {
-    [Collection("ConsoleOutput")]
+    [TestFixture]
+    [NonParallelizable]
     public class CrawlerTests
     {
         private Mock<IDownloadAWebpage> CreateMockDownloader(params (string url, string content, HttpStatusCode status)[] pages)
@@ -37,7 +38,7 @@ namespace WebsiteValidator.BL.Tests
             }
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_mit_einer_Seite_ohne_Links()
         {
             var downloader = CreateMockDownloader(
@@ -47,12 +48,12 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.Single(result);
-            Assert.Equal("https://example.com", result[0].Url);
-            Assert.Equal(HttpStatusCode.OK, result[0].HttpResponseCode);
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(result[0].Url, Is.EqualTo("https://example.com"));
+            Assert.That(result[0].HttpResponseCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_folgt_internen_Links()
         {
             var downloader = CreateMockDownloader(
@@ -63,10 +64,10 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.Equal(2, result.Length);
+            Assert.That(result, Has.Length.EqualTo(2));
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_respektiert_Limit()
         {
             var downloader = CreateMockDownloader(
@@ -78,10 +79,10 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 1, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.True(result.Length <= 2);
+            Assert.That(result.Length, Is.LessThanOrEqualTo(2));
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_crawlt_keine_externen_Links()
         {
             var downloader = CreateMockDownloader(
@@ -91,11 +92,11 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.Single(result);
+            Assert.That(result, Has.Length.EqualTo(1));
             downloader.Verify(d => d.Download("https://external.com/page"), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_besucht_jede_URL_nur_einmal()
         {
             var downloader = CreateMockDownloader(
@@ -106,12 +107,12 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.Equal(2, result.Length);
+            Assert.That(result, Has.Length.EqualTo(2));
             downloader.Verify(d => d.Download("https://example.com"), Times.Once);
             downloader.Verify(d => d.Download("https://example.com/page"), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_mit_zusaetzlichen_EntryPoints()
         {
             var downloader = CreateMockDownloader(
@@ -123,10 +124,10 @@ namespace WebsiteValidator.BL.Tests
                 new[] { "https://example.com/extra" });
             var result = RunCrawler(crawler);
 
-            Assert.Equal(2, result.Length);
+            Assert.That(result, Has.Length.EqualTo(2));
         }
 
-        [Fact]
+        [Test]
         public void CrawlEverything_behandelt_HTTP_500_mit_Retry()
         {
             var mock = new Mock<IDownloadAWebpage>();
@@ -144,8 +145,8 @@ namespace WebsiteValidator.BL.Tests
             var crawler = new Crawler("https://example.com", mock.Object, outputHelper.Object, 0, new string[0]);
             var result = RunCrawler(crawler);
 
-            Assert.Single(result);
-            Assert.Equal(2, callCount);
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(callCount, Is.EqualTo(2));
         }
     }
 }
