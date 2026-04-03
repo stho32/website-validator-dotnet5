@@ -126,8 +126,13 @@ jobs:
       run: dotnet publish WebsiteValidator/WebsiteValidator.csproj -c Release -o ${{ matrix.OUTPUTDIR }} -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:UseAppHost=true -r ${{ matrix.RUNTIMEID }} -p:Version=${{ needs.prepare.outputs.version }}
       working-directory: Source
 
-    - name: Zip output
+    - name: Zip output (Linux/macOS)
+      if: runner.os != 'Windows'
       run: zip -r ${{ matrix.OUTPUTDIR }}.zip ./Source/${{ matrix.OUTPUTDIR }}/
+
+    - name: Zip output (Windows)
+      if: runner.os == 'Windows'
+      run: Compress-Archive -Path ./Source/${{ matrix.OUTPUTDIR }}/* -DestinationPath ${{ matrix.OUTPUTDIR }}.zip
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
