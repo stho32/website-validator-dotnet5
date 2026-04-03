@@ -9,10 +9,39 @@ env:
   DOTNET_VERSION: '10.0.x'
 
 jobs:
-  build:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: Source
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      working-directory: Source
+
+    - name: Test with coverage
+      run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ../TestResults
+      working-directory: Source
+
+    - name: Upload coverage
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: TestResults/*/coverage.cobertura.xml
+
+  build:
     name: build-${{matrix.os}}
     runs-on: ${{ matrix.os }}
+    needs: test
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -29,25 +58,12 @@ jobs:
           RUNTIMEID: win-x64
           OUTPUTDIR: website-validator-win-x64
 
-
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Install dependencies
-      run: dotnet restore
-      working-directory: Source
-
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-      working-directory: Source
-
-    - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal
-      working-directory: Source
 
     - name: Publish
       run: dotnet publish WebsiteValidator/WebsiteValidator.csproj -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:UseAppHost=true -r ${{matrix.RUNTIMEID}}
