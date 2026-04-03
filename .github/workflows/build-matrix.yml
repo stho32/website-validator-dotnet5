@@ -1,7 +1,8 @@
-name: build
+name: CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -43,20 +44,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: test
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         include:
         - os: macos-latest
           RUNTIMEID: osx-x64
-          OUTPUTDIR: website-validator-osx-x64
-
         - os: ubuntu-latest
           RUNTIMEID: linux-x64
-          OUTPUTDIR: website-validator-linux-x64
-
         - os: windows-latest
           RUNTIMEID: win-x64
-          OUTPUTDIR: website-validator-win-x64
 
     steps:
     - uses: actions/checkout@v4
@@ -66,15 +63,5 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Publish
-      run: dotnet publish WebsiteValidator/WebsiteValidator.csproj -c Release -o ${{matrix.OUTPUTDIR}} -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:UseAppHost=true -r ${{matrix.RUNTIMEID}}
+      run: dotnet publish WebsiteValidator/WebsiteValidator.csproj -c Release -o publish -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:UseAppHost=true -r ${{matrix.RUNTIMEID}}
       working-directory: Source
-
-    - name: Zip output
-      run: zip -r ${{matrix.OUTPUTDIR}}.zip ./Source/${{matrix.OUTPUTDIR}}/
-
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          ${{matrix.OUTPUTDIR}}.zip
