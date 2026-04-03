@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
+using System.Threading.Tasks;
 using WebsiteValidator.BL.Classes;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace WebsiteValidator.BL.Tests
 {
@@ -15,9 +15,9 @@ namespace WebsiteValidator.BL.Tests
         /// github pages site.
         /// </summary>
         [Fact]
-        public async void Downloading_a_webpage_with_good_certificate_works()
+        public async Task Downloading_a_webpage_with_good_certificate_works()
         {
-            string url = "https://stho32.github.io/website-validator/can_download_sample.html";
+            string url = "https://stho32.github.io/website-validator-dotnet5/can_download_sample.html";
 
             var downloader = new DownloadAWebpage(false);
             var result = await downloader.Download(url);
@@ -29,7 +29,7 @@ namespace WebsiteValidator.BL.Tests
         [Fact]
         public void Downloading_a_webpage_with_bad_certificate_doesnt_work()
         {
-            string url = "https://stho32.github.io/website-validator/can_download_sample.html";
+            string url = "https://stho32.github.io/website-validator-dotnet5/can_download_sample.html";
 
             var downloader = new DownloadAWebpage(false);
             downloader.ForceBadCertificate = true;
@@ -41,9 +41,9 @@ namespace WebsiteValidator.BL.Tests
         }
 
         [Fact]
-        public async void Downloading_a_webpage_with_bad_certificate_but_us_ignoring_it_works()
+        public async Task Downloading_a_webpage_with_bad_certificate_but_us_ignoring_it_works()
         {
-            string url = "https://stho32.github.io/website-validator/can_download_sample.html";
+            string url = "https://stho32.github.io/website-validator-dotnet5/can_download_sample.html";
 
             var downloader = new DownloadAWebpage(true);
             var result = await downloader.Download(url);

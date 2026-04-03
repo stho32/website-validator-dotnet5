@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using WebsiteValidator.BL.Classes;
 using WebsiteValidator.BL.ExtensionMethods;
@@ -13,22 +11,32 @@ namespace WebsiteValidator
     {
         static int Main(string[] args)
         {
-            var urlOption = new Option<string>(new[] { "--url", "-u" }, description: "The url of the website you would like to crawl.");
-            urlOption.IsRequired = true;
+            var urlOption = new Option<string>("--url", "The url of the website you would like to crawl.");
+            urlOption.Aliases.Add("-u");
+            urlOption.Required = true;
 
-            var linksOption = new Option<bool>(new[] { "--links", "-l" }, description: "List all links that you can find.");
-            var crawlOption = new Option<bool>(new[] { "--crawl", "-c" }, description: "Crawl the full page and list all links.");
-            var sslOption = new Option<bool>(new[] { "--ignore-ssl" }, description: "Ignores SSL certificate");
-            var humanOption = new Option<bool>(new[] {"--human", "-h"}, "Human readable output (instead of json)");
-            
-            var outputOption = new Option<string>(new[] { "--output", "-o" }, description: "Where to save the results. Without the option i'll write on the screen.");
-            var limitOption = new Option<int>(new[] { "--limit" }, description: "Maximum number of pages to crawl.");
-            var additionalEntryPoints = new Option<string>(
-                new[] {"--additionalEntrypoints", "--ae"},
+            var linksOption = new Option<bool>("--links", "List all links that you can find.");
+            linksOption.Aliases.Add("-l");
+
+            var crawlOption = new Option<bool>("--crawl", "Crawl the full page and list all links.");
+            crawlOption.Aliases.Add("-c");
+
+            var sslOption = new Option<bool>("--ignore-ssl", "Ignores SSL certificate");
+
+            var humanOption = new Option<bool>("--human", "Human readable output (instead of json)");
+            humanOption.Aliases.Add("-h");
+
+            var outputOption = new Option<string>("--output", "Where to save the results. Without the option i'll write on the screen.");
+            outputOption.Aliases.Add("-o");
+
+            var limitOption = new Option<int>("--limit", "Maximum number of pages to crawl.");
+
+            var additionalEntryPointsOption = new Option<string>(
+                "--additionalEntrypoints",
                 "A simple text file with a list of urls, for e.g. sitemap-links...");
+            additionalEntryPointsOption.Aliases.Add("--ae");
 
-            // Create a root command with some options
-            var rootCommand = new RootCommand
+            var rootCommand = new RootCommand("WebsiteValidator, a tool to crawl a website and validate it")
             {
                 urlOption,
                 linksOption,
@@ -37,23 +45,31 @@ namespace WebsiteValidator
                 crawlOption,
                 outputOption,
                 limitOption,
-                additionalEntryPoints
+                additionalEntryPointsOption
             };
 
-            rootCommand.Description = "WebsiteValidator, a tool to crawl a website and validate it";
+            rootCommand.SetAction((parseResult) =>
+            {
+                var url = parseResult.GetValue(urlOption);
+                var links = parseResult.GetValue(linksOption);
+                var ignoreSsl = parseResult.GetValue(sslOption);
+                var human = parseResult.GetValue(humanOption);
+                var crawl = parseResult.GetValue(crawlOption);
+                var output = parseResult.GetValue(outputOption);
+                var limit = parseResult.GetValue(limitOption);
+                var additionalEntryPoints = parseResult.GetValue(additionalEntryPointsOption);
 
-            // Note that the parameters of the handler method are matched according to the names of the options
-            rootCommand.Handler = CommandHandler.Create<string, bool, bool, bool, bool, string, int, string>(ProcessCommand);
+                ProcessCommand(url, links, ignoreSsl, human, crawl, output, limit, additionalEntryPoints);
+            });
 
-            // Parse the incoming args and invoke the handler
-            return rootCommand.InvokeAsync(args).Result;
+            return rootCommand.Parse(args).Invoke();
         }
 
         private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl, string output,
             int limit, string additionalEntryPoints)
         {
             var outputHelper = new OutputHelperFactory().Get(human, output);
-            
+
             if (links) ListLinksForUrl(url, ignoreSsl, outputHelper);
 
             if (!string.IsNullOrWhiteSpace(additionalEntryPoints))
@@ -63,7 +79,7 @@ namespace WebsiteValidator
             }
             else
             {
-                if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, new string[0] );
+                if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, Array.Empty<string>());
             }
         }
 
@@ -74,7 +90,7 @@ namespace WebsiteValidator
 
             var crawler = new Crawler(url, downloadWebpage, outputHelper, limit, additionalKnownLinks);
             var result = crawler.CrawlEverything();
-            
+
             outputHelper.Write("crawlresult", result);
         }
 
@@ -87,9 +103,8 @@ namespace WebsiteValidator
                     .Download(url)
                     .ExtractUrls()
                     .ToAbsoluteUrls(url);
-            
+
             outputHelper.Write("links", links);
         }
     }
-
 }

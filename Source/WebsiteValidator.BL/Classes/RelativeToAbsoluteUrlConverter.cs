@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System;
 using System.Linq;
 using WebsiteValidator.BL.Interfaces;
 
@@ -6,14 +6,26 @@ namespace WebsiteValidator.BL.Classes
 {
     public class UrlToAbsolutUrlConverter : IUrlToAbsolutUrlConverter
     {
+        private static readonly string[] IgnoredSchemes = { "mailto:", "tel:", "javascript:", "data:", "ftp:" };
+
         public string ToAbsoluteUrl(string baseUrl, string url)
         {
+            if (string.IsNullOrWhiteSpace(url) || url.StartsWith("#"))
+            {
+                return null;
+            }
+
+            if (IgnoredSchemes.Any(scheme => url.StartsWith(scheme, StringComparison.OrdinalIgnoreCase)))
+            {
+                return null;
+            }
+
             if (url.EndsWith("/"))
             {
                 url = url.TrimEnd('/');
             }
 
-            if (url.StartsWith("https://"))
+            if (url.StartsWith("https://") || url.StartsWith("http://"))
             {
                 return url;
             }
@@ -21,8 +33,8 @@ namespace WebsiteValidator.BL.Classes
             if (url.StartsWith("//"))
             {
                 return url;
-            }            
-            
+            }
+
             var result = baseUrl;
 
             if (!result.EndsWith("/"))
@@ -32,7 +44,7 @@ namespace WebsiteValidator.BL.Classes
 
             if (url.StartsWith("/"))
             {
-                var temp = url.Remove(0, 1); // remove "/"
+                var temp = url.Remove(0, 1);
                 result += temp;
             }
 
@@ -45,9 +57,10 @@ namespace WebsiteValidator.BL.Classes
 
         public string[] ToAbsoluteUrl(string baseUrl, string[] links)
         {
-            return links.Select(
-                link => ToAbsoluteUrl(baseUrl, link)
-                ).ToArray();
+            return links
+                .Select(link => ToAbsoluteUrl(baseUrl, link))
+                .Where(link => link != null)
+                .ToArray();
         }
     }
 }
