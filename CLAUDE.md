@@ -33,6 +33,8 @@ dotnet run --project Source/WebsiteValidator -- -u https://example.com -c -o res
 dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --human
 dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --ignore-ssl
 dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --ae additional-urls.txt
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --sitemap
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --validate-html
 ```
 
 ## Projektstruktur
@@ -41,11 +43,11 @@ dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --ae a
 Source/
 ├── WebsiteValidator/           # Console-App (Entry Point, CLI-Optionen)
 ├── WebsiteValidator.BL/        # Business Logic
-│   ├── Classes/                # Crawler, DownloadAWebpage, OutputHelpers, UrlConverter
+│   ├── Classes/                # Crawler, DownloadAWebpage, OutputHelpers, UrlConverter, SitemapParser, HtmlValidator
 │   ├── Enums/                  # ValidationMessageSeverityEnum
 │   ├── ExtensionMethods/       # String[] und Webpage Extensions
 │   └── Interfaces/             # Alle Interfaces (IDownloadAWebpage, IOutputHelper, etc.)
-└── WebsiteValidator.BL.Tests/  # NUnit Tests (38 Tests, 96% Coverage)
+└── WebsiteValidator.BL.Tests/  # NUnit Tests (58 Tests, 96% Coverage)
 ```
 
 ## Technologie-Stack
@@ -60,6 +62,7 @@ Source/
 
 - **CI:** `.github/workflows/build-matrix.yml` — Test + Build bei Push/PR
 - **Release:** `.github/workflows/release.yml` — Automatischer Patch-Bump bei Push auf main, Manual Major/Minor via workflow_dispatch
+- **Security:** `.github/workflows/codeql.yml` — CodeQL-Analyse bei Push/PR und woechentlich
 
 ## Konventionen
 
