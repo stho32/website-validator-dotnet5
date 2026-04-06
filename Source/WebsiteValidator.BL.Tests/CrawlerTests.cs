@@ -128,6 +128,46 @@ namespace WebsiteValidator.BL.Tests
         }
 
         [Test]
+        public void CrawlEverything_Links_in_Ergebnissen_sind_distinct()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com",
+                    "<html><body>" +
+                    "<a href=\"https://example.com/page\">Nav</a>" +
+                    "<a href=\"https://example.com/page\">Content</a>" +
+                    "<a href=\"https://example.com/page\">Footer</a>" +
+                    "</body></html>",
+                    HttpStatusCode.OK),
+                ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result[0].Links, Has.Length.EqualTo(1));
+            Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/page"));
+        }
+
+        [Test]
+        public void CrawlEverything_Links_mit_verschiedenen_Quellen_sind_distinct()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com",
+                    "<html><body>" +
+                    "<a href=\"https://example.com/image.png\">Link</a>" +
+                    "<img src=\"https://example.com/image.png\" />" +
+                    "</body></html>",
+                    HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result[0].Links, Has.Length.EqualTo(1));
+            Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/image.png"));
+        }
+
+        [Test]
         public void CrawlEverything_behandelt_HTTP_500_mit_Retry()
         {
             var mock = new Mock<IDownloadAWebpage>();

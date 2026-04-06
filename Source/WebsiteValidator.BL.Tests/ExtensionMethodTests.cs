@@ -30,6 +30,17 @@ namespace WebsiteValidator.BL.Tests
             Assert.That(result, Has.Length.EqualTo(1));
             Assert.That(result[0], Is.EqualTo("https://example.com/page1"));
         }
+
+        [Test]
+        public void ToAbsoluteUrls_entfernt_Duplikate()
+        {
+            var links = new[] { "/page1", "/page2", "/page1", "/page2", "/page1" };
+            var result = links.ToAbsoluteUrls("https://example.com");
+
+            Assert.That(result, Has.Length.EqualTo(2));
+            Assert.That(result[0], Is.EqualTo("https://example.com/page1"));
+            Assert.That(result[1], Is.EqualTo("https://example.com/page2"));
+        }
     }
 
     [TestFixture]

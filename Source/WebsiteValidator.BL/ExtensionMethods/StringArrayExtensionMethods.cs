@@ -1,3 +1,4 @@
+using System.Linq;
 using WebsiteValidator.BL.Classes;
 
 namespace WebsiteValidator.BL.ExtensionMethods
@@ -7,7 +8,7 @@ namespace WebsiteValidator.BL.ExtensionMethods
         public static string[] ToAbsoluteUrls(this string[] links, string baseUrl)
         {
             var converter = new UrlToAbsolutUrlConverter();
-            return converter.ToAbsoluteUrl(baseUrl, links);
+            return converter.ToAbsoluteUrl(baseUrl, links).Distinct().ToArray();
         }
     }
 }
