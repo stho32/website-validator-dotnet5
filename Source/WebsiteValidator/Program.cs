@@ -13,40 +13,25 @@ namespace WebsiteValidator
     {
         static int Main(string[] args)
         {
-            var urlOption = new Option<string>("--url", "The url of the website you would like to crawl.");
-            urlOption.Aliases.Add("-u");
-            urlOption.Required = true;
+            var urlOption = new Option<string>("--url", "-u") { Description = "The url of the website you would like to crawl.", Required = true };
 
-            var linksOption = new Option<bool>("--links", "List all links that you can find.");
-            linksOption.Aliases.Add("-l");
+            var linksOption = new Option<bool>("--links", "-l") { Description = "List all links that you can find." };
 
-            var crawlOption = new Option<bool>("--crawl", "Crawl the full page and list all links.");
-            crawlOption.Aliases.Add("-c");
+            var crawlOption = new Option<bool>("--crawl", "-c") { Description = "Crawl the full page and list all links." };
 
-            var sslOption = new Option<bool>("--ignore-ssl", "Ignores SSL certificate");
+            var sslOption = new Option<bool>("--ignore-ssl") { Description = "Ignores SSL certificate" };
 
-            var humanOption = new Option<bool>("--human", "Human readable output (instead of json)");
-            humanOption.Aliases.Add("-h");
+            var humanOption = new Option<bool>("--human", "-h") { Description = "Human readable output (instead of json)" };
 
-            var outputOption = new Option<string>("--output", "Where to save the results. Without the option i'll write on the screen.");
-            outputOption.Aliases.Add("-o");
+            var outputOption = new Option<string>("--output", "-o") { Description = "Where to save the results. Without the option i'll write on the screen." };
 
-            var limitOption = new Option<int>("--limit", "Maximum number of pages to crawl.");
+            var limitOption = new Option<int>("--limit") { Description = "Maximum number of pages to crawl." };
 
-            var additionalEntryPointsOption = new Option<string>(
-                "--additionalEntrypoints",
-                "A simple text file with a list of urls, for e.g. sitemap-links...");
-            additionalEntryPointsOption.Aliases.Add("--ae");
+            var additionalEntryPointsOption = new Option<string>("--additionalEntrypoints", "--ae") { Description = "A simple text file with a list of urls, for e.g. sitemap-links..." };
 
-            var sitemapOption = new Option<bool>(
-                "--sitemap",
-                "Automatically fetch sitemap.xml and include all URLs as entry points.");
-            sitemapOption.Aliases.Add("-s");
+            var sitemapOption = new Option<bool>("--sitemap", "-s") { Description = "Automatically fetch sitemap.xml and include all URLs as entry points." };
 
-            var validateHtmlOption = new Option<bool>(
-                "--validate-html",
-                "Validate HTML of each crawled page and report errors.");
-            validateHtmlOption.Aliases.Add("--vh");
+            var validateHtmlOption = new Option<bool>("--validate-html", "--vh") { Description = "Validate HTML of each crawled page and report errors." };
 
             var rootCommand = new RootCommand("WebsiteValidator, a tool to crawl a website and validate it")
             {
