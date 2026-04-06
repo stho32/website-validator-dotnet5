@@ -47,7 +47,7 @@ Source/
 │   ├── Enums/                  # ValidationMessageSeverityEnum
 │   ├── ExtensionMethods/       # String[] und Webpage Extensions
 │   └── Interfaces/             # Alle Interfaces (IDownloadAWebpage, IOutputHelper, etc.)
-└── WebsiteValidator.BL.Tests/  # NUnit Tests (63 Tests, 96% Coverage)
+└── WebsiteValidator.BL.Tests/  # NUnit Tests (66 Tests, 96% Coverage)
 ```
 
 ## Technologie-Stack
