@@ -62,11 +62,14 @@ Source/
 
 - **CI:** `.github/workflows/build-matrix.yml` — Test + Build bei Push/PR
 - **Release:** `.github/workflows/release.yml` — Automatischer Patch-Bump bei Push auf main, Manual Major/Minor via workflow_dispatch
-- **Security:** `.github/workflows/codeql.yml` — CodeQL-Analyse bei Push/PR und woechentlich
+- **Security:** `.github/workflows/codeql.yml` — CodeQL-Analyse (security-extended) bei Push/PR und woechentlich
+- **Dependabot:** `.github/dependabot.yml` — Automatische NuGet + GitHub Actions Updates (woechentlich)
 
 ## Konventionen
 
 - Interfaces in `Interfaces/`, Implementierungen in `Classes/`
+- File-scoped Namespaces (`namespace X;` statt `namespace X { }`)
+- `<Nullable>enable</Nullable>` und `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in allen .csproj
 - Tests die Console.SetOut verwenden mit `[NonParallelizable]` markieren (NUnit Parallelisierung)
 - `[TestFixture]` auf jeder Testklasse, `[Test]` statt `[Fact]`, `Assert.That()` statt `Assert.Equal()`
 - Anforderungen in `Anforderungen/` mit Format `RXXXXX-Titel.md` (5-stellig mit führenden Nullen)
