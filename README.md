@@ -1,36 +1,77 @@
-# website-validator
-A dotnet application that crawls a website checking for http 404s and maybe more stuff later
+# WebsiteValidator
 
-Intended usage:
+A .NET CLI tool that crawls websites and checks for HTTP errors (404, 500, etc.), broken links, and HTML validation issues.
+
+## Features
+
+- Crawls all internal pages starting from a given URL
+- Detects HTTP errors (404, 500, etc.) across the site
+- Validates HTML structure of each crawled page
+- Imports additional entry points from sitemap.xml or text files
+- Outputs results as JSON (console, file) or human-readable format
+- Supports SSL certificate bypass for testing environments
+
+## Installation
+
+Requires [.NET 10 SDK](https://dotnet.microsoft.com/download).
+
+```bash
+dotnet build Source/WebsiteValidator.sln
 ```
-websitevalidator -u https://www.yourdomain.whatever -c [--limit xxx] -o structure.json
+
+## Usage
+
+```bash
+# Basic crawl
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c
+
+# Crawl with page limit
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --limit 10
+
+# Save results to file
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c -o result.json
+
+# Human-readable output
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --human
+
+# Ignore SSL certificate errors
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --ignore-ssl
+
+# Include sitemap URLs as entry points
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --sitemap
+
+# Include URLs from a text file
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --ae additional-urls.txt
+
+# Validate HTML of each page
+dotnet run --project Source/WebsiteValidator -- -u https://example.com -c --validate-html
 ```
 
-Output: 
+## Options
 
-A big json file with a lot of information.
-A part of it being the structure of the website.
-Useful for further analysis. Its a simple big JSON file. A good thing if you like to use powershell e.g.. Just read the thing and do whatever.
+| Option | Short | Description |
+|---|---|---|
+| `--url` | `-u` | URL of the website to crawl (required) |
+| `--crawl` | `-c` | Crawl the full site and list all links |
+| `--links` | `-l` | List all links found on a single page |
+| `--limit` | | Maximum number of pages to crawl |
+| `--output` | `-o` | Save results to a JSON file |
+| `--human` | `-h` | Human-readable output instead of JSON |
+| `--ignore-ssl` | | Ignore SSL certificate errors |
+| `--sitemap` | `-s` | Fetch sitemap.xml and include URLs as entry points |
+| `--additionalEntrypoints` | `--ae` | Text file with additional URLs to crawl |
+| `--validate-html` | `--vh` | Validate HTML structure of each page |
 
-## Next tasks
+## Development
 
-### basic functionality
+```bash
+# Run tests
+dotnet test Source/WebsiteValidator.sln
 
-  - [X] convert relative urls to absolute ones
-  - [X] return the output either as human readable or json (is there a generic approach?); maybe add a --human switch for the more readable output and default to json
-  - [X] return only distinct results
-  - [X] enable some basic crawling activity
-    - [X] remember the result of each url, so every url is only crawled once
-    - [ ] only check external urls, but do not feed links from them back into the system. It is important that they are basically reachable but we do not want to check their pages, too)
-  - [ ] also crawl resource files like linked images, css and javascript
-  - [ ] add an option for a final human readable report?
+# Run tests with coverage
+dotnet test Source/WebsiteValidator.sln --collect:"XPlat Code Coverage" --results-directory ./TestResults
+```
 
-### validations
+## License
 
-  - [ ] validations should be configurable without the need for a recompilation
-  - [ ] group results by http status code, create error messages for 404s and other problems
-  - [ ] pages shall not contain "Error", "Warning", or anything else that looks like a php problem
-  - [ ] can I have an overview of which pages are mentioned in the sitemap and which are not
-  - [ ] can I have an overview of pages which are possibly disallowed by robots.txt
-  - [ ] we need something that allows us to mute known validation messages that we want to ignore
-
+This project is open source.
