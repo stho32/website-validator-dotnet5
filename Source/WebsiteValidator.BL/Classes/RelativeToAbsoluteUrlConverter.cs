@@ -52,6 +52,12 @@ namespace WebsiteValidator.BL.Classes
                 result += url;
             }
 
+            // Normalize path traversals (../ and ./) via Uri class
+            if (Uri.TryCreate(result, UriKind.Absolute, out var normalized))
+            {
+                result = normalized.GetLeftPart(UriPartial.Path);
+            }
+
             if (result.EndsWith("/"))
             {
                 result = result.TrimEnd('/');

@@ -107,6 +107,27 @@ namespace WebsiteValidator.BL.Tests
         }
 
         [Test]
+        public void Relative_URL_mit_Doppelpunkt_Doppelpunkt_wird_normalisiert()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com/sub", "../datenschutz.html");
+            Assert.That(result, Is.EqualTo("https://example.com/datenschutz.html"));
+        }
+
+        [Test]
+        public void Mehrfaches_Doppelpunkt_Doppelpunkt_wird_normalisiert()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com/a/b/c", "../../page.html");
+            Assert.That(result, Is.EqualTo("https://example.com/a/page.html"));
+        }
+
+        [Test]
+        public void Punkt_Slash_wird_normalisiert()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com/sub", "./page.html");
+            Assert.That(result, Is.EqualTo("https://example.com/sub/page.html"));
+        }
+
+        [Test]
         public void Batch_Konvertierung_filtert_ungueltige_URLs()
         {
             var links = new[] { "/page.html", "mailto:test@test.com", "https://extern.com", "#top", "/about" };
