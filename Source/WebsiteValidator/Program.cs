@@ -43,6 +43,11 @@ namespace WebsiteValidator
                 "Automatically fetch sitemap.xml and include all URLs as entry points.");
             sitemapOption.Aliases.Add("-s");
 
+            var validateHtmlOption = new Option<bool>(
+                "--validate-html",
+                "Validate HTML of each crawled page and report errors.");
+            validateHtmlOption.Aliases.Add("--vh");
+
             var rootCommand = new RootCommand("WebsiteValidator, a tool to crawl a website and validate it")
             {
                 urlOption,
@@ -53,7 +58,8 @@ namespace WebsiteValidator
                 outputOption,
                 limitOption,
                 additionalEntryPointsOption,
-                sitemapOption
+                sitemapOption,
+                validateHtmlOption
             };
 
             rootCommand.SetAction((parseResult) =>
@@ -67,15 +73,16 @@ namespace WebsiteValidator
                 var limit = parseResult.GetValue(limitOption);
                 var additionalEntryPoints = parseResult.GetValue(additionalEntryPointsOption);
                 var sitemap = parseResult.GetValue(sitemapOption);
+                var validateHtml = parseResult.GetValue(validateHtmlOption);
 
-                ProcessCommand(url, links, ignoreSsl, human, crawl, output, limit, additionalEntryPoints, sitemap);
+                ProcessCommand(url, links, ignoreSsl, human, crawl, output, limit, additionalEntryPoints, sitemap, validateHtml);
             });
 
             return rootCommand.Parse(args).Invoke();
         }
 
         private static void ProcessCommand(string url, bool links, bool ignoreSsl, bool human, bool crawl, string output,
-            int limit, string additionalEntryPoints, bool sitemap)
+            int limit, string additionalEntryPoints, bool sitemap, bool validateHtml)
         {
             var outputHelper = new OutputHelperFactory().Get(human, output);
 
@@ -94,7 +101,7 @@ namespace WebsiteValidator
                 allAdditionalLinks.AddRange(sitemapUrls);
             }
 
-            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, allAdditionalLinks.Distinct().ToArray());
+            if (crawl) CrawlUrl(url, ignoreSsl, outputHelper, limit, allAdditionalLinks.Distinct().ToArray(), validateHtml);
         }
 
         private static string[] FetchSitemapUrls(string baseUrl, bool ignoreSsl)
@@ -147,11 +154,11 @@ namespace WebsiteValidator
         }
 
         private static void CrawlUrl(string url, bool ignoreSsl, IOutputHelper outputHelper, int limit,
-            string[] additionalKnownLinks)
+            string[] additionalKnownLinks, bool validateHtml = false)
         {
             IDownloadAWebpage downloadWebpage = new DownloadAWebpage(ignoreSsl);
 
-            var crawler = new Crawler(url, downloadWebpage, outputHelper, limit, additionalKnownLinks);
+            var crawler = new Crawler(url, downloadWebpage, outputHelper, limit, additionalKnownLinks, validateHtml);
             var result = crawler.CrawlEverything();
 
             outputHelper.Write("crawlresult", result);

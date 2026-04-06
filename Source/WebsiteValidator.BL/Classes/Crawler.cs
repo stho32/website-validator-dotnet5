@@ -14,16 +14,20 @@ namespace WebsiteValidator.BL.Classes
         private readonly IDownloadAWebpage _downloadWebpage;
         private readonly IOutputHelper _outputHelper;
         private readonly int _limit;
+        private readonly bool _validateHtml;
+        private readonly IHtmlValidator _htmlValidator;
         private readonly Dictionary<string, bool> _urlsWithScrapedStatus = new Dictionary<string, bool>();
         private readonly List<IUrlInformation> _scrapeResults = new List<IUrlInformation>();
         private string _baseUrl;
-        
+
         public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit,
-            string[] additionalKnownLinks)
+            string[] additionalKnownLinks, bool validateHtml = false)
         {
             _downloadWebpage = downloadWebpage;
             _outputHelper = outputHelper;
             _limit = limit;
+            _validateHtml = validateHtml;
+            _htmlValidator = validateHtml ? new HtmlValidator() : null;
             _urlsWithScrapedStatus.Add(url, false);
 
             foreach (var link in additionalKnownLinks)
@@ -64,13 +68,24 @@ namespace WebsiteValidator.BL.Classes
                         .ExtractUrls()
                         .ToAbsoluteUrls(_baseUrl);
 
+                    var isHtmlValid = true;
+                    var htmlErrors = System.Array.Empty<string>();
+                    if (_validateHtml && _htmlValidator != null)
+                    {
+                        var validationResult = _htmlValidator.Validate(download.Result.RawContent);
+                        isHtmlValid = validationResult.IsValid;
+                        htmlErrors = validationResult.Errors;
+                    }
+
                     _scrapeResults.Add(new UrlInformation(
-                        nextUrl, 
-                        links, 
+                        nextUrl,
+                        links,
                         download.Result.HttpCode,
                         download.Result.RawContent,
                         ExtractInnerText(download.Result.RawContent),
-                        download.Result.RawContent.Length
+                        download.Result.RawContent.Length,
+                        isHtmlValid,
+                        htmlErrors
                         ));
                     
                     foreach (var link in links)

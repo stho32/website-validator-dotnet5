@@ -10,6 +10,8 @@ namespace WebsiteValidator.BL.Interfaces
         HttpStatusCode HttpResponseCode { get; }
         string Content { get; }
         string ContentWithoutHtml { get; }
+        bool IsHtmlValid { get; }
+        string[] HtmlErrors { get; }
     }
 
 

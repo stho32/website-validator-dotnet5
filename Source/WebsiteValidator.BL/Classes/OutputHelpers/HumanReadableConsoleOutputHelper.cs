@@ -26,6 +26,15 @@ namespace WebsiteValidator.BL.Classes
             {
                 position += 1;
                 Console.WriteLine($" - {position,4}. {thing.Url}");
+                Console.WriteLine($"          HTTP: {(int)thing.HttpResponseCode} | HTML Valid: {(thing.IsHtmlValid ? "Yes" : "No")}");
+
+                if (!thing.IsHtmlValid && thing.HtmlErrors.Length > 0)
+                {
+                    foreach (var error in thing.HtmlErrors)
+                    {
+                        Console.WriteLine($"          ERROR: {error}");
+                    }
+                }
 
                 var subposition = 0;
                 foreach (var link in thing.Links)

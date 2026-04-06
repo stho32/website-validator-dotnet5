@@ -188,5 +188,33 @@ namespace WebsiteValidator.BL.Tests
             Assert.That(result, Has.Length.EqualTo(1));
             Assert.That(callCount, Is.EqualTo(2));
         }
+
+        [Test]
+        public void CrawlEverything_mit_validateHtml_setzt_IsHtmlValid()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: true);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result[0].IsHtmlValid, Is.False);
+            Assert.That(result[0].HtmlErrors, Is.Not.Empty);
+        }
+
+        [Test]
+        public void CrawlEverything_ohne_validateHtml_setzt_IsHtmlValid_true()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: false);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result[0].IsHtmlValid, Is.True);
+            Assert.That(result[0].HtmlErrors, Is.Empty);
+        }
     }
 }
