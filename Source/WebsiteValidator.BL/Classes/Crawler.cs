@@ -39,7 +39,7 @@ namespace WebsiteValidator.BL.Classes
                 }
             }
             
-            _baseUrl = url;
+            _baseUrl = url.TrimEnd('/');
         }
 
         public IUrlInformation[] CrawlEverything()
@@ -157,24 +157,29 @@ namespace WebsiteValidator.BL.Classes
             }
         }
 
+        private bool IsInternalUrl(string url)
+        {
+            return url == _baseUrl || url.StartsWith(_baseUrl + "/");
+        }
+
         private void StatusReport(int scrapedUrls)
         {
-            var potenialUrlsToCrawl = 
+            var potenialUrlsToCrawl =
                 _urlsWithScrapedStatus.
-                    Where(x => 
+                    Where(x =>
                         x.Value == false
-                        && x.Key.StartsWith(_baseUrl)).ToArray();
-            
+                        && IsInternalUrl(x.Key)).ToArray();
+
             Console.WriteLine($"## STATUS : {scrapedUrls} urls scraped, {_urlsWithScrapedStatus.Count} urls known, {potenialUrlsToCrawl.Length} urls to crawl remaining");
         }
 
         private string GetNextUrlToCrawl()
         {
-            var potenialUrlsToCrawl = 
+            var potenialUrlsToCrawl =
                 _urlsWithScrapedStatus.
-                    FirstOrDefault(x => 
+                    FirstOrDefault(x =>
                         x.Value == false
-                        && x.Key.StartsWith(_baseUrl)).Key;
+                        && IsInternalUrl(x.Key)).Key;
 
             return potenialUrlsToCrawl;
         }

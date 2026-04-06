@@ -47,6 +47,10 @@ namespace WebsiteValidator.BL.Classes
                 var temp = url.Remove(0, 1);
                 result += temp;
             }
+            else
+            {
+                result += url;
+            }
 
             if (result.EndsWith("/"))
             {

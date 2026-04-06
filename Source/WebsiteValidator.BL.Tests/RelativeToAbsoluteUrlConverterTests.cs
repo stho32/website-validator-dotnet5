@@ -86,6 +86,27 @@ namespace WebsiteValidator.BL.Tests
         }
 
         [Test]
+        public void Relative_URL_ohne_fuehrenden_Slash_wird_korrekt_aufgeloest()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com", "service.html");
+            Assert.That(result, Is.EqualTo("https://example.com/service.html"));
+        }
+
+        [Test]
+        public void Relative_URL_ohne_fuehrenden_Slash_mit_Trailing_Slash_Base()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com/", "index.html");
+            Assert.That(result, Is.EqualTo("https://example.com/index.html"));
+        }
+
+        [Test]
+        public void Relative_URL_in_Unterverzeichnis_ohne_fuehrenden_Slash()
+        {
+            var result = _converter.ToAbsoluteUrl("https://example.com", "sub/page.html");
+            Assert.That(result, Is.EqualTo("https://example.com/sub/page.html"));
+        }
+
+        [Test]
         public void Batch_Konvertierung_filtert_ungueltige_URLs()
         {
             var links = new[] { "/page.html", "mailto:test@test.com", "https://extern.com", "#top", "/about" };

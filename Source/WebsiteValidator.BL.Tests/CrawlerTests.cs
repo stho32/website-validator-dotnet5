@@ -216,5 +216,34 @@ namespace WebsiteValidator.BL.Tests
             Assert.That(result[0].IsHtmlValid, Is.True);
             Assert.That(result[0].HtmlErrors, Is.Empty);
         }
+
+        [Test]
+        public void CrawlEverything_folgt_relativen_Links_ohne_fuehrenden_Slash()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com", "<html><body><a href=\"service.html\">Service</a></body></html>", HttpStatusCode.OK),
+                ("https://example.com/service.html", "<html><body>Service Page</body></html>", HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result, Has.Length.EqualTo(2));
+            Assert.That(result[1].Url, Is.EqualTo("https://example.com/service.html"));
+        }
+
+        [Test]
+        public void CrawlEverything_mit_Trailing_Slash_Base_URL_folgt_internen_Links()
+        {
+            var downloader = CreateMockDownloader(
+                ("https://example.com/", "<html><body><a href=\"https://example.com/page\">Page</a></body></html>", HttpStatusCode.OK),
+                ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
+            var outputHelper = new Mock<IOutputHelper>();
+
+            var crawler = new Crawler("https://example.com/", downloader.Object, outputHelper.Object, 0, new string[0]);
+            var result = RunCrawler(crawler);
+
+            Assert.That(result, Has.Length.EqualTo(2));
+        }
     }
 }
