@@ -1,7 +1,6 @@
-﻿namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IValidator
 {
-    public interface IValidator
-    {
-        IValidationMessage[] Validate(IWebpage webpage);
-    }
+    IValidationMessage[] Validate(IWebpage webpage);
 }

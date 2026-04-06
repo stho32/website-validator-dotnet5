@@ -1,10 +1,9 @@
-﻿using WebsiteValidator.BL.Enums;
+using WebsiteValidator.BL.Enums;
 
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IValidationMessage
 {
-    public interface IValidationMessage
-    {
-        ValidationMessageSeverityEnum Severity { get; }
-        string Message { get; }
-    }
+    ValidationMessageSeverityEnum Severity { get; }
+    string Message { get; }
 }

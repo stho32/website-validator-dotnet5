@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+/// <summary>
+/// We have to download pages, so we need to have things that download pages.
+/// </summary>
+public interface IDownloadAWebpage
 {
-    /// <summary>
-    /// We have to download pages, so we need to have things that download pages.
-    /// </summary>
-    public interface IDownloadAWebpage
-    {
-        Task<IWebpage> Download(string url);
-    }
+    Task<IWebpage> Download(string url);
 }

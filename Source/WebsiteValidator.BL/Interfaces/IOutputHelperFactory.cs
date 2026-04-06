@@ -1,7 +1,6 @@
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IOutputHelperFactory
 {
-    public interface IOutputHelperFactory
-    {
-        IOutputHelper Get(bool human, string outputFilename);
-    }
+    IOutputHelper Get(bool human, string? outputFilename);
 }

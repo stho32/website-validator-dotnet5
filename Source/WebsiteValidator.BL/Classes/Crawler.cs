@@ -7,181 +7,181 @@ using HtmlAgilityPack;
 using WebsiteValidator.BL.ExtensionMethods;
 using WebsiteValidator.BL.Interfaces;
 
-namespace WebsiteValidator.BL.Classes
+namespace WebsiteValidator.BL.Classes;
+
+public class Crawler
 {
-    public class Crawler
+    private readonly IDownloadAWebpage _downloadWebpage;
+    private readonly IOutputHelper _outputHelper;
+    private readonly int _limit;
+    private readonly bool _validateHtml;
+    private readonly IHtmlValidator? _htmlValidator;
+    private readonly Dictionary<string, bool> _urlsWithScrapedStatus = new Dictionary<string, bool>();
+    private readonly List<IUrlInformation> _scrapeResults = new List<IUrlInformation>();
+    private string _baseUrl;
+
+    public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit,
+        string[] additionalKnownLinks, bool validateHtml = false)
     {
-        private readonly IDownloadAWebpage _downloadWebpage;
-        private readonly IOutputHelper _outputHelper;
-        private readonly int _limit;
-        private readonly bool _validateHtml;
-        private readonly IHtmlValidator _htmlValidator;
-        private readonly Dictionary<string, bool> _urlsWithScrapedStatus = new Dictionary<string, bool>();
-        private readonly List<IUrlInformation> _scrapeResults = new List<IUrlInformation>();
-        private string _baseUrl;
+        _downloadWebpage = downloadWebpage;
+        _outputHelper = outputHelper;
+        _limit = limit;
+        _validateHtml = validateHtml;
+        _htmlValidator = validateHtml ? new HtmlValidator() : null;
+        _urlsWithScrapedStatus.Add(url, false);
 
-        public Crawler(string url, IDownloadAWebpage downloadWebpage, IOutputHelper outputHelper, int limit,
-            string[] additionalKnownLinks, bool validateHtml = false)
+        foreach (var link in additionalKnownLinks)
         {
-            _downloadWebpage = downloadWebpage;
-            _outputHelper = outputHelper;
-            _limit = limit;
-            _validateHtml = validateHtml;
-            _htmlValidator = validateHtml ? new HtmlValidator() : null;
-            _urlsWithScrapedStatus.Add(url, false);
-
-            foreach (var link in additionalKnownLinks)
+            if (!string.IsNullOrWhiteSpace(link.Trim()))
             {
-                if (!string.IsNullOrWhiteSpace(link.Trim()))
-                {
-                    if (!_urlsWithScrapedStatus.ContainsKey(link))
-                        _urlsWithScrapedStatus.Add(link, false);
-                }
+                if (!_urlsWithScrapedStatus.ContainsKey(link))
+                    _urlsWithScrapedStatus.Add(link, false);
             }
-            
-            _baseUrl = url.TrimEnd('/');
         }
 
-        public IUrlInformation[] CrawlEverything()
+        _baseUrl = url.TrimEnd('/');
+    }
+
+    public IUrlInformation[] CrawlEverything()
+    {
+        var nextUrl = GetNextUrlToCrawl();
+        var scrapedUrls = 0;
+
+        while (!string.IsNullOrWhiteSpace(nextUrl))
         {
-            var nextUrl = GetNextUrlToCrawl();
-            var scrapedUrls = 0;
-
-            while (!string.IsNullOrWhiteSpace(nextUrl))
-            {
-                _urlsWithScrapedStatus[nextUrl] = true;
-                StatusReport(scrapedUrls);
-                scrapedUrls += 1; 
-                Console.WriteLine($" - processing {nextUrl} ...");
-
-                try
-                {
-                    var download = _downloadWebpage.Download(nextUrl); 
-                    
-                    //if (((int)download.Result.HttpCode < 200) || ((int)download.Result.HttpCode > 299))
-                    if ((int)download.Result.HttpCode == 500)
-                    {
-                            // Take another try..
-                            download = _downloadWebpage.Download(nextUrl);
-                    }
-                    var links = download
-                        .ExtractUrls()
-                        .ToAbsoluteUrls(_baseUrl);
-
-                    var isHtmlValid = true;
-                    var htmlErrors = System.Array.Empty<string>();
-                    if (_validateHtml && _htmlValidator != null)
-                    {
-                        var validationResult = _htmlValidator.Validate(download.Result.RawContent);
-                        isHtmlValid = validationResult.IsValid;
-                        htmlErrors = validationResult.Errors;
-                    }
-
-                    _scrapeResults.Add(new UrlInformation(
-                        nextUrl,
-                        links,
-                        download.Result.HttpCode,
-                        download.Result.RawContent,
-                        ExtractInnerText(download.Result.RawContent),
-                        download.Result.RawContent.Length,
-                        isHtmlValid,
-                        htmlErrors
-                        ));
-                    
-                    foreach (var link in links)
-                    {
-                        if (!_urlsWithScrapedStatus.ContainsKey(link))
-                        {
-                            _urlsWithScrapedStatus.Add(link, false);
-                            //Console.WriteLine($"     + {link}");
-                        }
-                        else
-                        {
-                            //Console.WriteLine($"     / {link} already known");
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-
-                nextUrl = GetNextUrlToCrawl();
-
-                // if limit given, we only crawl n pages
-                if (_limit > 0)
-                {
-                    if (scrapedUrls > _limit)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            return _scrapeResults.ToArray();
-        }
-
-        private string ExtractInnerText(string resultRawContent)
-        {
-            if (!resultRawContent.ToLower().Contains("html"))
-            {
-                return "";
-            }
+            _urlsWithScrapedStatus[nextUrl] = true;
+            StatusReport(scrapedUrls);
+            scrapedUrls += 1;
+            Console.WriteLine($" - processing {nextUrl} ...");
 
             try
             {
-                var blacklist = new List<string>();
-                blacklist.Add("script");
-                blacklist.Add("style");
-                blacklist.Add("head");
-                var document = new HtmlDocument();
-                document.LoadHtml(resultRawContent);
-                var result = new StringBuilder();
+                var download = _downloadWebpage.Download(nextUrl);
 
-                foreach(HtmlNode node in document.DocumentNode.SelectNodes("//text()"))
+                //if (((int)download.Result.HttpCode < 200) || ((int)download.Result.HttpCode > 299))
+                if ((int)download.Result.HttpCode == 500)
                 {
-                    if (node.InnerText.Trim() != "" &&
-                        !blacklist.Contains(node.ParentNode.Name)) {
-                        //Console.WriteLine(node.ParentNode.Name + ":");
-                        //Console.WriteLine("text=" + node.InnerText);
-                        result.AppendLine(node.InnerText);
-                        //Console.ReadKey();
+                    // Take another try..
+                    download = _downloadWebpage.Download(nextUrl);
+                }
+                var links = download
+                    .ExtractUrls()
+                    .ToAbsoluteUrls(_baseUrl);
+
+                var isHtmlValid = true;
+                var htmlErrors = System.Array.Empty<string>();
+                if (_validateHtml && _htmlValidator != null)
+                {
+                    var validationResult = _htmlValidator.Validate(download.Result.RawContent);
+                    isHtmlValid = validationResult.IsValid;
+                    htmlErrors = validationResult.Errors;
+                }
+
+                _scrapeResults.Add(new UrlInformation(
+                    nextUrl,
+                    links,
+                    download.Result.HttpCode,
+                    download.Result.RawContent,
+                    ExtractInnerText(download.Result.RawContent),
+                    download.Result.RawContent.Length,
+                    isHtmlValid,
+                    htmlErrors
+                    ));
+
+                foreach (var link in links)
+                {
+                    if (!_urlsWithScrapedStatus.ContainsKey(link))
+                    {
+                        _urlsWithScrapedStatus.Add(link, false);
+                        //Console.WriteLine($"     + {link}");
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"     / {link} already known");
                     }
                 }
-                
-                return HttpUtility.HtmlDecode(result.ToString());
             }
             catch (Exception e)
             {
-                return e.Message;
+                Console.WriteLine(e.Message);
+            }
+
+            nextUrl = GetNextUrlToCrawl();
+
+            // if limit given, we only crawl n pages
+            if (_limit > 0)
+            {
+                if (scrapedUrls > _limit)
+                {
+                    break;
+                }
             }
         }
 
-        private bool IsInternalUrl(string url)
+        return _scrapeResults.ToArray();
+    }
+
+    private string ExtractInnerText(string resultRawContent)
+    {
+        if (!resultRawContent.ToLower().Contains("html"))
         {
-            return url == _baseUrl || url.StartsWith(_baseUrl + "/");
+            return "";
         }
 
-        private void StatusReport(int scrapedUrls)
+        try
         {
-            var potenialUrlsToCrawl =
-                _urlsWithScrapedStatus.
-                    Where(x =>
-                        x.Value == false
-                        && IsInternalUrl(x.Key)).ToArray();
+            var blacklist = new List<string>();
+            blacklist.Add("script");
+            blacklist.Add("style");
+            blacklist.Add("head");
+            var document = new HtmlDocument();
+            document.LoadHtml(resultRawContent);
+            var result = new StringBuilder();
 
-            Console.WriteLine($"## STATUS : {scrapedUrls} urls scraped, {_urlsWithScrapedStatus.Count} urls known, {potenialUrlsToCrawl.Length} urls to crawl remaining");
+            foreach (HtmlNode node in document.DocumentNode.SelectNodes("//text()"))
+            {
+                if (node.InnerText.Trim() != "" &&
+                    !blacklist.Contains(node.ParentNode.Name))
+                {
+                    //Console.WriteLine(node.ParentNode.Name + ":");
+                    //Console.WriteLine("text=" + node.InnerText);
+                    result.AppendLine(node.InnerText);
+                    //Console.ReadKey();
+                }
+            }
+
+            return HttpUtility.HtmlDecode(result.ToString());
         }
-
-        private string GetNextUrlToCrawl()
+        catch (Exception e)
         {
-            var potenialUrlsToCrawl =
-                _urlsWithScrapedStatus.
-                    FirstOrDefault(x =>
-                        x.Value == false
-                        && IsInternalUrl(x.Key)).Key;
-
-            return potenialUrlsToCrawl;
+            return e.Message;
         }
+    }
+
+    private bool IsInternalUrl(string url)
+    {
+        return url == _baseUrl || url.StartsWith(_baseUrl + "/");
+    }
+
+    private void StatusReport(int scrapedUrls)
+    {
+        var potenialUrlsToCrawl =
+            _urlsWithScrapedStatus.
+                Where(x =>
+                    x.Value == false
+                    && IsInternalUrl(x.Key)).ToArray();
+
+        Console.WriteLine($"## STATUS : {scrapedUrls} urls scraped, {_urlsWithScrapedStatus.Count} urls known, {potenialUrlsToCrawl.Length} urls to crawl remaining");
+    }
+
+    private string GetNextUrlToCrawl()
+    {
+        var potenialUrlsToCrawl =
+            _urlsWithScrapedStatus.
+                FirstOrDefault(x =>
+                    x.Value == false
+                    && IsInternalUrl(x.Key)).Key;
+
+        return potenialUrlsToCrawl;
     }
 }

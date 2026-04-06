@@ -7,243 +7,242 @@ using NUnit.Framework;
 using WebsiteValidator.BL.Classes;
 using WebsiteValidator.BL.Interfaces;
 
-namespace WebsiteValidator.BL.Tests
+namespace WebsiteValidator.BL.Tests;
+
+[TestFixture]
+[NonParallelizable]
+public class CrawlerTests
 {
-    [TestFixture]
-    [NonParallelizable]
-    public class CrawlerTests
+    private Mock<IDownloadAWebpage> CreateMockDownloader(params (string url, string content, HttpStatusCode status)[] pages)
     {
-        private Mock<IDownloadAWebpage> CreateMockDownloader(params (string url, string content, HttpStatusCode status)[] pages)
+        var mock = new Mock<IDownloadAWebpage>();
+        foreach (var (url, content, status) in pages)
         {
-            var mock = new Mock<IDownloadAWebpage>();
-            foreach (var (url, content, status) in pages)
+            mock.Setup(d => d.Download(url))
+                .ReturnsAsync(new Webpage(url, content, content.Length, status));
+        }
+        return mock;
+    }
+
+    private static IUrlInformation[] RunCrawler(Crawler crawler)
+    {
+        var originalOut = Console.Out;
+        try
+        {
+            Console.SetOut(new StringWriter());
+            return crawler.CrawlEverything();
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
+
+    [Test]
+    public void CrawlEverything_mit_einer_Seite_ohne_Links()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body>Hello</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result, Has.Length.EqualTo(1));
+        Assert.That(result[0].Url, Is.EqualTo("https://example.com"));
+        Assert.That(result[0].HttpResponseCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public void CrawlEverything_folgt_internen_Links()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><a href=\"https://example.com/page2\">Link</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/page2", "<html><body>Page 2</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result, Has.Length.EqualTo(2));
+    }
+
+    [Test]
+    public void CrawlEverything_respektiert_Limit()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><a href=\"https://example.com/p2\">L</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/p2", "<html><body><a href=\"https://example.com/p3\">L</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/p3", "<html><body>End</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 1, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result.Length, Is.LessThanOrEqualTo(2));
+    }
+
+    [Test]
+    public void CrawlEverything_crawlt_keine_externen_Links()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><a href=\"https://external.com/page\">Extern</a></body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result, Has.Length.EqualTo(1));
+        downloader.Verify(d => d.Download("https://external.com/page"), Times.Never);
+    }
+
+    [Test]
+    public void CrawlEverything_besucht_jede_URL_nur_einmal()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><a href=\"https://example.com/page\">L</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/page", "<html><body><a href=\"https://example.com\">Back</a></body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result, Has.Length.EqualTo(2));
+        downloader.Verify(d => d.Download("https://example.com"), Times.Once);
+        downloader.Verify(d => d.Download("https://example.com/page"), Times.Once);
+    }
+
+    [Test]
+    public void CrawlEverything_mit_zusaetzlichen_EntryPoints()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body>Main</body></html>", HttpStatusCode.OK),
+            ("https://example.com/extra", "<html><body>Extra</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0,
+            new[] { "https://example.com/extra" });
+        var result = RunCrawler(crawler);
+
+        Assert.That(result, Has.Length.EqualTo(2));
+    }
+
+    [Test]
+    public void CrawlEverything_Links_in_Ergebnissen_sind_distinct()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com",
+                "<html><body>" +
+                "<a href=\"https://example.com/page\">Nav</a>" +
+                "<a href=\"https://example.com/page\">Content</a>" +
+                "<a href=\"https://example.com/page\">Footer</a>" +
+                "</body></html>",
+                HttpStatusCode.OK),
+            ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result[0].Links, Has.Length.EqualTo(1));
+        Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/page"));
+    }
+
+    [Test]
+    public void CrawlEverything_Links_mit_verschiedenen_Quellen_sind_distinct()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com",
+                "<html><body>" +
+                "<a href=\"https://example.com/image.png\">Link</a>" +
+                "<img src=\"https://example.com/image.png\" />" +
+                "</body></html>",
+                HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
+
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
+
+        Assert.That(result[0].Links, Has.Length.EqualTo(1));
+        Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/image.png"));
+    }
+
+    [Test]
+    public void CrawlEverything_behandelt_HTTP_500_mit_Retry()
+    {
+        var mock = new Mock<IDownloadAWebpage>();
+        var callCount = 0;
+        mock.Setup(d => d.Download("https://example.com"))
+            .Returns(() =>
             {
-                mock.Setup(d => d.Download(url))
-                    .ReturnsAsync(new Webpage(url, content, content.Length, status));
-            }
-            return mock;
-        }
+                callCount++;
+                if (callCount == 1)
+                    return Task.FromResult<IWebpage>(new Webpage("https://example.com", "<html></html>", 13, HttpStatusCode.InternalServerError));
+                return Task.FromResult<IWebpage>(new Webpage("https://example.com", "<html></html>", 13, HttpStatusCode.OK));
+            });
+        var outputHelper = new Mock<IOutputHelper>();
 
-        private static IUrlInformation[] RunCrawler(Crawler crawler)
-        {
-            var originalOut = Console.Out;
-            try
-            {
-                Console.SetOut(new StringWriter());
-                return crawler.CrawlEverything();
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-        }
+        var crawler = new Crawler("https://example.com", mock.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
 
-        [Test]
-        public void CrawlEverything_mit_einer_Seite_ohne_Links()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body>Hello</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
+        Assert.That(result, Has.Length.EqualTo(1));
+        Assert.That(callCount, Is.EqualTo(2));
+    }
 
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
+    [Test]
+    public void CrawlEverything_mit_validateHtml_setzt_IsHtmlValid()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
 
-            Assert.That(result, Has.Length.EqualTo(1));
-            Assert.That(result[0].Url, Is.EqualTo("https://example.com"));
-            Assert.That(result[0].HttpResponseCode, Is.EqualTo(HttpStatusCode.OK));
-        }
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: true);
+        var result = RunCrawler(crawler);
 
-        [Test]
-        public void CrawlEverything_folgt_internen_Links()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><a href=\"https://example.com/page2\">Link</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/page2", "<html><body>Page 2</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
+        Assert.That(result[0].IsHtmlValid, Is.False);
+        Assert.That(result[0].HtmlErrors, Is.Not.Empty);
+    }
 
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
+    [Test]
+    public void CrawlEverything_ohne_validateHtml_setzt_IsHtmlValid_true()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
 
-            Assert.That(result, Has.Length.EqualTo(2));
-        }
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: false);
+        var result = RunCrawler(crawler);
 
-        [Test]
-        public void CrawlEverything_respektiert_Limit()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><a href=\"https://example.com/p2\">L</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/p2", "<html><body><a href=\"https://example.com/p3\">L</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/p3", "<html><body>End</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
+        Assert.That(result[0].IsHtmlValid, Is.True);
+        Assert.That(result[0].HtmlErrors, Is.Empty);
+    }
 
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 1, new string[0]);
-            var result = RunCrawler(crawler);
+    [Test]
+    public void CrawlEverything_folgt_relativen_Links_ohne_fuehrenden_Slash()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com", "<html><body><a href=\"service.html\">Service</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/service.html", "<html><body>Service Page</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
 
-            Assert.That(result.Length, Is.LessThanOrEqualTo(2));
-        }
+        var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
 
-        [Test]
-        public void CrawlEverything_crawlt_keine_externen_Links()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><a href=\"https://external.com/page\">Extern</a></body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
+        Assert.That(result, Has.Length.EqualTo(2));
+        Assert.That(result[1].Url, Is.EqualTo("https://example.com/service.html"));
+    }
 
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
+    [Test]
+    public void CrawlEverything_mit_Trailing_Slash_Base_URL_folgt_internen_Links()
+    {
+        var downloader = CreateMockDownloader(
+            ("https://example.com/", "<html><body><a href=\"https://example.com/page\">Page</a></body></html>", HttpStatusCode.OK),
+            ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
+        var outputHelper = new Mock<IOutputHelper>();
 
-            Assert.That(result, Has.Length.EqualTo(1));
-            downloader.Verify(d => d.Download("https://external.com/page"), Times.Never);
-        }
+        var crawler = new Crawler("https://example.com/", downloader.Object, outputHelper.Object, 0, new string[0]);
+        var result = RunCrawler(crawler);
 
-        [Test]
-        public void CrawlEverything_besucht_jede_URL_nur_einmal()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><a href=\"https://example.com/page\">L</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/page", "<html><body><a href=\"https://example.com\">Back</a></body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result, Has.Length.EqualTo(2));
-            downloader.Verify(d => d.Download("https://example.com"), Times.Once);
-            downloader.Verify(d => d.Download("https://example.com/page"), Times.Once);
-        }
-
-        [Test]
-        public void CrawlEverything_mit_zusaetzlichen_EntryPoints()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body>Main</body></html>", HttpStatusCode.OK),
-                ("https://example.com/extra", "<html><body>Extra</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0,
-                new[] { "https://example.com/extra" });
-            var result = RunCrawler(crawler);
-
-            Assert.That(result, Has.Length.EqualTo(2));
-        }
-
-        [Test]
-        public void CrawlEverything_Links_in_Ergebnissen_sind_distinct()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com",
-                    "<html><body>" +
-                    "<a href=\"https://example.com/page\">Nav</a>" +
-                    "<a href=\"https://example.com/page\">Content</a>" +
-                    "<a href=\"https://example.com/page\">Footer</a>" +
-                    "</body></html>",
-                    HttpStatusCode.OK),
-                ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result[0].Links, Has.Length.EqualTo(1));
-            Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/page"));
-        }
-
-        [Test]
-        public void CrawlEverything_Links_mit_verschiedenen_Quellen_sind_distinct()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com",
-                    "<html><body>" +
-                    "<a href=\"https://example.com/image.png\">Link</a>" +
-                    "<img src=\"https://example.com/image.png\" />" +
-                    "</body></html>",
-                    HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result[0].Links, Has.Length.EqualTo(1));
-            Assert.That(result[0].Links[0], Is.EqualTo("https://example.com/image.png"));
-        }
-
-        [Test]
-        public void CrawlEverything_behandelt_HTTP_500_mit_Retry()
-        {
-            var mock = new Mock<IDownloadAWebpage>();
-            var callCount = 0;
-            mock.Setup(d => d.Download("https://example.com"))
-                .Returns(() =>
-                {
-                    callCount++;
-                    if (callCount == 1)
-                        return Task.FromResult<IWebpage>(new Webpage("https://example.com", "<html></html>", 13, HttpStatusCode.InternalServerError));
-                    return Task.FromResult<IWebpage>(new Webpage("https://example.com", "<html></html>", 13, HttpStatusCode.OK));
-                });
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", mock.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result, Has.Length.EqualTo(1));
-            Assert.That(callCount, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void CrawlEverything_mit_validateHtml_setzt_IsHtmlValid()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: true);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result[0].IsHtmlValid, Is.False);
-            Assert.That(result[0].HtmlErrors, Is.Not.Empty);
-        }
-
-        [Test]
-        public void CrawlEverything_ohne_validateHtml_setzt_IsHtmlValid_true()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><div><span></div></span></body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0], validateHtml: false);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result[0].IsHtmlValid, Is.True);
-            Assert.That(result[0].HtmlErrors, Is.Empty);
-        }
-
-        [Test]
-        public void CrawlEverything_folgt_relativen_Links_ohne_fuehrenden_Slash()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com", "<html><body><a href=\"service.html\">Service</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/service.html", "<html><body>Service Page</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result, Has.Length.EqualTo(2));
-            Assert.That(result[1].Url, Is.EqualTo("https://example.com/service.html"));
-        }
-
-        [Test]
-        public void CrawlEverything_mit_Trailing_Slash_Base_URL_folgt_internen_Links()
-        {
-            var downloader = CreateMockDownloader(
-                ("https://example.com/", "<html><body><a href=\"https://example.com/page\">Page</a></body></html>", HttpStatusCode.OK),
-                ("https://example.com/page", "<html><body>Page</body></html>", HttpStatusCode.OK));
-            var outputHelper = new Mock<IOutputHelper>();
-
-            var crawler = new Crawler("https://example.com/", downloader.Object, outputHelper.Object, 0, new string[0]);
-            var result = RunCrawler(crawler);
-
-            Assert.That(result, Has.Length.EqualTo(2));
-        }
+        Assert.That(result, Has.Length.EqualTo(2));
     }
 }

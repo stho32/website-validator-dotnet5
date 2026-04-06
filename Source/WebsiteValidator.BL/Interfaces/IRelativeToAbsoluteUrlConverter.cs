@@ -1,7 +1,6 @@
-﻿namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IUrlToAbsolutUrlConverter
 {
-    public interface IUrlToAbsolutUrlConverter
-    {
-        string ToAbsoluteUrl(string baseUrl, string relativeUrl);
-    }
+    string? ToAbsoluteUrl(string baseUrl, string relativeUrl);
 }

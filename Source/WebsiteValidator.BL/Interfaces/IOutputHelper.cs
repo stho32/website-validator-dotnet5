@@ -1,8 +1,7 @@
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IOutputHelper
 {
-    public interface IOutputHelper
-    {
-        void Write(string name, string[] arrayOfThings);
-        void Write(string name, IUrlInformation[] arrayOfThings);
-    }
+    void Write(string name, string[] arrayOfThings);
+    void Write(string name, IUrlInformation[] arrayOfThings);
 }

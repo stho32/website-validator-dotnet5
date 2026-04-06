@@ -1,7 +1,6 @@
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface ISitemapParser
 {
-    public interface ISitemapParser
-    {
-        string[] ExtractUrls(string sitemapXml);
-    }
+    string[] ExtractUrls(string? sitemapXml);
 }

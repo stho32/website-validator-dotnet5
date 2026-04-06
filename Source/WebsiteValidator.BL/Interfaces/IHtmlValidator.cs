@@ -1,19 +1,18 @@
-namespace WebsiteValidator.BL.Interfaces
+namespace WebsiteValidator.BL.Interfaces;
+
+public interface IHtmlValidator
 {
-    public interface IHtmlValidator
-    {
-        HtmlValidationResult Validate(string html);
-    }
+    HtmlValidationResult Validate(string? html);
+}
 
-    public class HtmlValidationResult
-    {
-        public bool IsValid { get; }
-        public string[] Errors { get; }
+public class HtmlValidationResult
+{
+    public bool IsValid { get; }
+    public string[] Errors { get; }
 
-        public HtmlValidationResult(bool isValid, string[] errors)
-        {
-            IsValid = isValid;
-            Errors = errors;
-        }
+    public HtmlValidationResult(bool isValid, string[] errors)
+    {
+        IsValid = isValid;
+        Errors = errors;
     }
 }
