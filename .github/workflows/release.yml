@@ -30,7 +30,7 @@ jobs:
       tag: ${{ steps.bump.outputs.tag }}
       should_release: ${{ steps.bump.outputs.should_release }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
         fetch-tags: true
@@ -107,7 +107,7 @@ jobs:
           OUTPUTDIR: website-validator-win-x64
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -146,7 +146,7 @@ jobs:
     needs: [prepare, build-and-release]
     if: needs.prepare.outputs.should_release == 'true'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
